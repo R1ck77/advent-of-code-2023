@@ -1,5 +1,5 @@
 
-My solutions for the Advent of Code 2023 (about to start) in Emacs LISP.
+My solutions for the Advent of Code 2023 in Emacs LISP.
 
 ** How to install the code
 
