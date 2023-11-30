@@ -1,0 +1,72 @@
+
+My solutions for the Advent of Code 2023 (about to start) in Emacs LISP.
+
+** How to install the code
+
+Just clone the repository: it doesn't require any setup at all.
+
+** What do you need
+
+- Emacs (obviously) with the following packages installed:
+  - buttercup
+  - the 'dash' and 's' emacs packages
+- make (optionally)
+
+** How to run the samples
+
+The code is organized in "day" files representing the solutions of each part of a specific day, each one contains 2 functions computing the solution for the first part and the second part, like:
+
+#+begin_src elisp
+(day/part-1 blocks)
+#+end_src elisp
+
+or 
+
+#+begin_src elisp
+(day5/part-2 lines)
+#+end_src elisp
+
+where the first require blocks of lines and the second a single list of lines.
+
+This inconsistency in the type of the argument was introduced for my convenience, anyway the input format is always simple and can be deducted from the argument name or the test:  it's usually lines, numbers or block of lines.
+
+There are buttercup tests that will run my solution for each day against the example provided with the description and my personal input.
+
+To run the tests which ensure that all solutions reproduce the expected results you can either type:
+
+#+begin_src shell
+make
+#+end_src
+
+if you have make installed, otherwise you can execute:
+
+#+begin_src shell
+emacs --eval "(setq load-path (cons \".\" load-path))" -batch -f package-initialize -f buttercup-run-discover
+#+end_src
+
+IF you want to execute a single test you can run:
+
+#+begin_src shell
+ARG=4 make single
+#+end_src
+
+*** How to use the code to compute your own solutions
+
+*MOST* solutions are general, that is, they should work with different inputs (see the NOTES, though…).
+
+If you want to compute the solution against your own input:
+
+1. overwrite the data file for the day of interest in the  =data= directory with your own problem input
+2. run the single test corresponding to the problem of interest
+
+The execution will fail and buttercup will print a message with the expected result (my solution) and the solution of your input (the number you want).
+
+Another way is to load the buffer with the specific day, and compute the solution manually (e.g. using *ielm*).
+
+Keep in mind that, in order to load the el files, you need to have the =load-path= configured to include the current directory:
+
+#+begin_src elisp
+(setq load-path (cons "." load-path))
+#+end_src
+
+Also, while I expect my code to work for your inputs, /I can't be 100% certain/ that it will: maybe your input has quirks that my code wasn't designed for, or maybe my code worked out the example and my problem out of sheer luck (hopefully not…).
