@@ -47,24 +47,38 @@
                (-map #'day01/-get-numbers lines)))))
 
 ;; 53867 low
+;; 53885 wrong
 ;; 53903 wrong
 
-(defun day01/-get-all-digits-matches (line)
-  (--filter (car it) (--map (list (s-index-of (car it) line) (cadr it))
-                            string-to-number))  )
+(defun day01/-get-match-data (line repr+value)
+  (let ((pattern (car repr+value)))
+   (when-let ((match-start (s-index-of pattern line)))
+     (list match-start (cadr repr+value) (substring line (+ match-start (length pattern)))))))
 
-(defun day01/-get-first-digit (line)
-  (cadar (--sort (< (car it) (car other))
-                 (day01/-get-all-digits-matches line))))
+(defun day01/-get-first-match (line)
+  (rest (car (--sort (< (car it) (car other))
+                (--filter (car it)
+                          (--map (day01/-get-match-data line it)
+                                 string-to-number))))))
 
-(defun day01/-get-last-digit (line)
-  (cadar (--sort (> (car it) (car other))
-                 (day01/-get-all-digits-matches line))))
+(defun day01/-get-all-digits (line)
+  (let ((numbers)
+        (remaining line)
+        (match))
+    (while remaining
+      (setq match (day01/-get-first-match remaining))
+      (if match
+          (progn
+            (setq numbers (cons (car match) numbers))
+            (setq remaining (cadr match)))
+        (setq remaining nil)))
+    (reverse numbers)))
 
 
 (defun day01/get-pairs (line)
-  (list (day01/-get-first-digit line)
-        (day01/-get-last-digit line)))
+  (let ((digits (day01/-get-all-digits line)))
+    (list (car digits) (car (reverse digits))))
+)
 
 (defun day01/part-2 (lines)
   (day01/-add-all

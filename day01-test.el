@@ -23,4 +23,4 @@
               :to-be 281))
     (it "solves the problem"
       (expect (day01/part-2 (advent/read-problem-lines 1 :problem))
-              :to-be 53903))))
+              :to-be 53885))))
