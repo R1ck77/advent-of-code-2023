@@ -36,32 +36,30 @@
          (-map #'day01/-get-extremes
                (-map #'day01/-get-numbers lines)))))
 
-(defun day01/-next-replacement ()
-  (cadr
-   (car
-    (--sort (< (car it )
-               (car other))
-            (--filter it
-                      (--map (progn
-                               (goto-char (point-min))
-                               (if (search-forward (car it) nil t)
-                                   (list (match-beginning 0) it)))
-                             string-to-digit))))))
+;; 53867 low
 
-(defun day01/-replace-all ()
-  (let ((next-replacement (day01/-next-replacement)))
-    (while next-replacement
-      (goto-char (point-min))
-      (search-forward (car next-replacement))
-      (replace-match (cadr next-replacement))
-      (setq next-replacement (day01/-next-replacement)))))
+(defun day01/-next-replacement (line)
+  (caadar (--sort (< (car it) (car other))
+                  (--filter (car it)
+                            (--map (list (s-index-of (car it) line)
+                                         it)
+                                   string-to-digit)))))
 
-(defun day01/replace-english-numbers (line)
-  (with-temp-buffer
-    (insert line)
-    (day01/-replace-all)
-    (buffer-substring (point-min) (point-max))))
+(defun day01/-fuck-elisp (text start end replacement)
+  (let ((head (substring text 0 start))
+        (tail (substring text end)))
+    (concat head replacement tail)))
 
+(defun day01/replace-english-numbers (line)  
+  ;; fist attempt: just replace the numbers in order  
+  (let ((to-replace  (day01/-next-replacement line)))
+    (while to-replace
+      (let* ((replacement (cadr (assoc to-replace string-to-digit)))
+            (start (s-index-of to-replace line))
+            (end (+ start (length to-replace))))
+        (setq line (day01/-fuck-elisp line start end replacement))
+        (setq to-replace (day01/-next-replacement line))))
+    line))
 
 (defun day01/-replace-numerical-strings (lines)
   (-map #'day01/replace-english-numbers lines))
