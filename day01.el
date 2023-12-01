@@ -28,6 +28,7 @@
 ;; 53867 low
 ;; 53885 wrong
 ;; 53903 wrong
+;; 53881 wrong
 
 (defconst day01/replacements '(("one" "1")
                                ("two" "2")
@@ -39,22 +40,28 @@
                                ("eight" "8")
                                ("nine" "9")))
 
-(defun day01/-get-ready-replacement (line)
-  (car (--filter (s-starts-with? (car it) line) day01/replacements)))
+(defun day01/-get-possible-replacements (line)
+  "Returns a list of (start-position value replacement)"
+  (--sort (< (car it) (car other))
+          (--filter (car it)
+                    (--map (cons (s-index-of (car it) line) it)
+                           day01/replacements))))
+
+(defun day01/-replace (line start+value+replacement)
+  (if start+value+replacement
+   (concat (substring line 0 (car start+value+replacement))
+           (elt start+value+replacement 2)
+           (substring line (+ (car start+value+replacement) (length (cadr start+value+replacement)))))
+   line))
+
+(defun day01/-replace-first (line)
+  (day01/-replace line (car (day01/-get-possible-replacements line))))
+
+(defun day01/-replace-last (line )
+  (day01/-replace line (car (reverse (day01/-get-possible-replacements line)))))
 
 (defun day01/replace-values (line)
-  (let ((processed)
-        (remaining line))
-    (while (not (zerop (length remaining)))
-      (let ((replacement (day01/-get-ready-replacement remaining)))
-        (if replacement
-            (progn
-              (push (cadr replacement) processed)
-              (setq remaining (substring remaining (length (car replacement))))
-              )
-          (push (substring remaining 0 1) processed)
-          (setq remaining (substring remaining 1)))))
-    (apply #'concat (reverse processed))))
+  (day01/-replace-last (day01/-replace-first line)))
 
 (defun day01/part-2 (lines)
   (day01/part-1
