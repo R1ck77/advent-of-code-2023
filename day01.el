@@ -29,6 +29,7 @@
 ;; 53885 wrong
 ;; 53903 wrong
 ;; 53881 wrong
+;; 53848 wrong - tokenize, replace for each token first, then last
 
 (defconst day01/replacements '(("one" "1")
                                ("two" "2")
@@ -54,14 +55,29 @@
            (substring line (+ (car start+value+replacement) (length (cadr start+value+replacement)))))
    line))
 
+(defun day01/-tokenize (line)
+  (let ((tokens))
+    (--each (s-slice-at "[0-9]" line)
+      (if (s-matches? "^[0-9]" it)
+          (progn 
+            (push (substring it 0 1) tokens)
+            (push (substring it 1) tokens))
+        (push it tokens)
+        ))
+    (--filter (not (s-blank? it)) (reverse  tokens)))
+  )
+
 (defun day01/-replace-first (line)
   (day01/-replace line (car (day01/-get-possible-replacements line))))
 
 (defun day01/-replace-last (line )
   (day01/-replace line (car (reverse (day01/-get-possible-replacements line)))))
 
+(defun day01/replace-token (token)
+  (day01/-replace-last (day01/-replace-first token)))
+
 (defun day01/replace-values (line)
-  (day01/-replace-last (day01/-replace-first line)))
+  (apply #'concat (-map #'day01/replace-token (day01/-tokenize line))))
 
 (defun day01/part-2 (lines)
   (day01/part-1
