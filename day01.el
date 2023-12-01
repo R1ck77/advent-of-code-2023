@@ -25,12 +25,6 @@
          (-map #'day01/-get-extremes
                (-map #'day01/-get-numbers lines)))))
 
-;; 53867 low
-;; 53885 wrong
-;; 53903 wrong
-;; 53881 wrong
-;; 53848 wrong - tokenize, replace for each token first, then last
-
 (defconst day01/replacements '(("one" "1")
                                ("two" "2")
                                ("three" "3")
@@ -79,8 +73,25 @@
 (defun day01/replace-values (line)
   (apply #'concat (-map #'day01/replace-token (day01/-tokenize line))))
 
-(defun day01/part-2 (lines)
-  (day01/part-1
-   (-map #'day01/replace-values lines)))
+(defconst day01/numbers '(("one" 1) ("two" 2) ("three" 3) ("four" 4) ("five" 5)
+                          ("six" 6) ("seven" 7) ("eight" 8) ("nine" 9)
+                          ("0" 0) ("1" 1) ("2" 2) ("3" 3) ("4" 4) ("5" 5)
+                          ("6" 6) ("7" 7) ("8" 8) ("9" 9)))
+
+(defun day01/dumb-get-numbers (line)
+  (let ((numbers)
+        (remaining line))
+    (while (not (s-blank? remaining))
+      (--each day01/numbers
+        (if (s-starts-with? (car it) remaining)
+            (push (cadr it) numbers)))
+      (setq remaining (substring remaining 1)))
+    (reverse numbers)))
+
+(defun day01/part-2 (lines)  
+  (day01/-add-all
+   (-map #'day01/-number-from-extremes
+         (--map (list (car it)  (car (reverse it)))
+              (-map #'day01/dumb-get-numbers lines)))))
 
 (provide 'day01)
