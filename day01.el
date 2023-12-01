@@ -3,15 +3,25 @@
 (require 's)
 
 ;; Zero doesn't seem to be present…
-(defconst string-to-digit '(("one" "1")
-                            ("two" "2")
-                            ("three" "3")
-                            ("four" "4")
-                            ("five" "5")
-                            ("six" "6")
-                            ("seven" "7")
-                            ("eight" "8")
-                            ("nine" "9")))
+(defconst string-to-number '(("one" 1)
+                             ("two" 2)
+                             ("three" 3)
+                             ("four" 4)
+                             ("five" 5)
+                             ("six" 6)
+                             ("seven" 7)
+                             ("eight" 8)
+                             ("nine" 9)
+                             ("0" 0)
+                             ("1" 1)
+                             ("2" 2)
+                             ("3" 3)
+                             ("4" 4)
+                             ("5" 5)
+                             ("6" 6)
+                             ("7" 7)
+                             ("8" 8)
+                             ("9" 9)))
 
 (defun day01/-get-numbers (s)
   (-map #'string-to-number
@@ -37,35 +47,28 @@
                (-map #'day01/-get-numbers lines)))))
 
 ;; 53867 low
+;; 53903 wrong
 
-(defun day01/-next-replacement (line)
-  (caadar (--sort (< (car it) (car other))
-                  (--filter (car it)
-                            (--map (list (s-index-of (car it) line)
-                                         it)
-                                   string-to-digit)))))
+(defun day01/-get-all-digits-matches (line)
+  (--filter (car it) (--map (list (s-index-of (car it) line) (cadr it))
+                            string-to-number))  )
 
-(defun day01/-fuck-elisp (text start end replacement)
-  (let ((head (substring text 0 start))
-        (tail (substring text end)))
-    (concat head replacement tail)))
+(defun day01/-get-first-digit (line)
+  (cadar (--sort (< (car it) (car other))
+                 (day01/-get-all-digits-matches line))))
 
-(defun day01/replace-english-numbers (line)  
-  ;; fist attempt: just replace the numbers in order  
-  (let ((to-replace  (day01/-next-replacement line)))
-    (while to-replace
-      (let* ((replacement (cadr (assoc to-replace string-to-digit)))
-            (start (s-index-of to-replace line))
-            (end (+ start (length to-replace))))
-        (setq line (day01/-fuck-elisp line start end replacement))
-        (setq to-replace (day01/-next-replacement line))))
-    line))
+(defun day01/-get-last-digit (line)
+  (cadar (--sort (> (car it) (car other))
+                 (day01/-get-all-digits-matches line))))
 
-(defun day01/-replace-numerical-strings (lines)
-  (-map #'day01/replace-english-numbers lines))
+
+(defun day01/get-pairs (line)
+  (list (day01/-get-first-digit line)
+        (day01/-get-last-digit line)))
 
 (defun day01/part-2 (lines)
-  (day01/part-1
-   (day01/-replace-numerical-strings lines)))
+  (day01/-add-all
+   (-map #'day01/-number-from-extremes
+         (-map #'day01/get-pairs lines))))
 
 (provide 'day01)

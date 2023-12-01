@@ -11,16 +11,16 @@
               :to-be 54953)))
   (describe "part 2"
     (it "replaces each string to numbers correctly"
-      (expect (day01/replace-english-numbers "two1nine") :to-equal "219")
-      (expect (day01/replace-english-numbers "eightwothree") :to-equal "8wo3")
-      (expect (day01/replace-english-numbers "abcone2threexyz") :to-equal "abc123xyz")
-      (expect (day01/replace-english-numbers "xtwone3four") :to-equal "x2ne34")
-      (expect (day01/replace-english-numbers "4nineeightseven2") :to-equal "49872")
-      (expect (day01/replace-english-numbers "zoneight234") :to-equal "z1ight234")
-      (expect (day01/replace-english-numbers "7pqrstsixteen") :to-equal "7pqrst6teen"))
+      (expect (day01/get-pairs "two1nine") :to-equal '(2 9))
+      (expect (day01/get-pairs "eightwothree") :to-equal '(8 3))
+      (expect (day01/get-pairs "abcone2threexyz") :to-equal '(1 3))
+      (expect (day01/get-pairs "xtwone3four") :to-equal '(2 4))
+      (expect (day01/get-pairs "4nineeightseven2") :to-equal '(4 2))
+      (expect (day01/get-pairs "zoneight234") :to-equal '(1 4))
+      (expect (day01/get-pairs "7pqrstsixteen") :to-equal '(7 6)))
     (it "replicates the example"
       (expect (day01/part-2 (advent/read-problem-lines 1 :example 2))
               :to-be 281))
     (it "solves the problem"
       (expect (day01/part-2 (advent/read-problem-lines 1 :problem))
-              :to-be 53885))))
+              :to-be 53903))))
