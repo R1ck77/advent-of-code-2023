@@ -1,7 +1,7 @@
 (require 'day02)
 (require 'buttercup)
 
-(describe "Day 2"
+(describe "--- Day 2: Cube Conundrum ---"
   (describe "part 1"
     (it "replicates the example"
       (expect (day02/part-1 (advent/read-problem-lines 2 :example))
