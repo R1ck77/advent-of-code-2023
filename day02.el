@@ -37,9 +37,22 @@
 (defun day02/part-1 (lines)
   (apply #'+
          (-map #'car (-filter #'day02/is-valid-game
-                        (day02/read-games lines)))))
+                              (day02/read-games lines)))))
+
+(defun day02/min-l (draw-1 draw-2)
+  (--map (max (car it) (cdr it))
+         (-zip draw-1 draw-2)))
+
+(defun day02/get-minimum-cubes (game)
+  (-reduce #'day02/min-l (cadr game)))
+
+(defun day02/power (cubes)
+  (apply #'* cubes))
 
 (defun day02/part-2 (lines)
-  (error "Not yet implemented"))
+  (apply #'+
+         (-map #'day02/power
+               (-map #'day02/get-minimum-cubes
+                     (day02/read-games lines)))))
 
 (provide 'day02)
