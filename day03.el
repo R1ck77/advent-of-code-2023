@@ -21,13 +21,14 @@
   "Dumb and slow intersection routine"
   (advent/get (day03/-create-halo (car n-pos) (cadr n-pos)) s-pos))
 
-(defun day03/read-numbers (row current-row)
+(defun day03/read-tokens (row current-row regex)
+  "Returns the modified row and the list of tokens found"
   (let ((matches)
         (current-match))
-    (while (setq current-match (car (s-match day03/num-regex current-row)))
+    (while (setq current-match (car (s-match regex current-row)))
       (let* ((start (s-index-of current-match current-row))
              (end (+ start (length current-match))))
-        (push (list (string-to-number current-match)
+        (push (list current-match
                     row
                     (list start end))
               matches)
@@ -36,21 +37,23 @@
                                   (substring current-row end)))))
     (list current-row (reverse matches))))
 
-;; TODO/FIXME horrible repeated code
+(defun day03/update-tokens (conversion-f row+tokens)
+  (list (car row+tokens)
+        (--map (funcall conversion-f it)
+               (cadr row+tokens))))
+
+(defun day03/read-numbers (row current-row)
+  (day03/update-tokens (lambda (token)
+                         (cons (string-to-number (car token))
+                               (cdr token)))
+                       (day03/read-tokens row current-row day03/num-regex)))
+
 (defun day03/read-symbols (row current-row)
-  (let ((matches)
-        (current-match))
-    (while (setq current-match (car (s-match day03/symbol-regex current-row)))
-      (let* ((start (s-index-of current-match current-row))
-             (end (1+ start)))
-        (push (list (read (concat ":" current-match))
-                    row
-                    start)
-              matches)
-        (setq current-row (concat (substring current-row 0 start)
-                                  (s-repeat (- end start) " ")
-                                  (substring current-row end)))))
-    (list current-row (reverse matches))))
+  (day03/update-tokens (lambda (token)
+                         (list (read (concat ":" (car token)))
+                               (cadr token)
+                               (car (elt token 2))))
+                       (day03/read-tokens row current-row day03/symbol-regex)))
 
 (defun day03/read-line (row s)
   (let ((current-row+matches (day03/read-numbers row (s-replace "." " " s))))
