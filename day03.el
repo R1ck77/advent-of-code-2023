@@ -2,7 +2,7 @@
 (require 'advent-utils)
 (require 's)
 
-(defun day03/intersects? (a b))
+(defun day03/intersects? (column n-coord s-coord))
 
 (defun day03/read-line (row s))
 
