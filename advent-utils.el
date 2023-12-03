@@ -133,6 +133,10 @@ It binds:
   (declare (indent 1))
   `(advent/each-hash ,table (lambda (it-key it-value) ,@forms)))
 
+(defun advent/debug-print-table (table)
+  (advent/-each-hash  table
+    (message "%s -> %s" it-key it-value)))
+
 (defun advent/table-size (table)
   "Returns the number of elements in a table"
   (hash-table-count table))

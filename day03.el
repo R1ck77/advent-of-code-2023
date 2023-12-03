@@ -5,8 +5,21 @@
 (defconst day03/num-regex "[0-9]+")
 (defconst day03/symbol-regex "[^0-9 ]")
 
-(defun day03/intersects? (column n-coord s-coord)
-  )
+(defun day03/-create-coords (row base)
+  (--map (list row it) base))
+
+(defun day03/-create-halo (row n-coord)
+  (let ((base (number-sequence (1- (car n-coord)) (cadr n-coord)))
+        (halo (advent/table)))
+    (--each (list (1- row) row (1+ row))
+      (-each (day03/-create-coords it base)
+        (lambda (value)
+          (advent/put halo value t))))
+    halo))
+
+(defun day03/intersects? (n-pos s-pos)
+  "Dumb and slow intersection routine"
+  (advent/get (day03/-create-halo (car n-pos) (cadr n-pos)) s-pos))
 
 (defun day03/read-numbers (row current-row)
   (let ((matches)
