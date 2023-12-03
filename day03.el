@@ -34,7 +34,7 @@
         (setq current-row (concat (substring current-row 0 start)
                                   (s-repeat (- end start) " ")
                                   (substring current-row end)))))
-    (list current-row matches)))
+    (list current-row (reverse matches))))
 
 ;; TODO/FIXME horrible repeated code
 (defun day03/read-symbols (row current-row)
@@ -50,15 +50,27 @@
         (setq current-row (concat (substring current-row 0 start)
                                   (s-repeat (- end start) " ")
                                   (substring current-row end)))))
-    (list current-row matches)))
+    (list current-row (reverse matches))))
 
 (defun day03/read-line (row s)
   (let ((current-row+matches (day03/read-numbers row (s-replace "." " " s))))
-    (reverse (append (cadr (day03/read-symbols row (car current-row+matches))) (cadr current-row+matches)))))
+    (list :row row
+          :numbers (cadr current-row+matches)
+          :symbols (cadr (day03/read-symbols row (car current-row+matches))))))
 
+(defun day03/read-lines (lines)
+  "-> ((0 numbers symbols) (1 numbers symbols) ...)"
+  (cadr
+   (-reduce-from (lambda (acc value)
+                   (let ((row (1+ (car acc)))
+                         (data (cadr acc)))
+                     (push (day03/read-line row value) data)
+                     (list row data)))
+                 '(-1 nil)
+                 lines)))
 
 (defun day03/part-1 (lines)
-  (error "Not yet implemented"))
+  )
 
 (defun day03/part-2 (lines)
   (error "Not yet implemented"))
