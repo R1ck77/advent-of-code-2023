@@ -8,10 +8,10 @@
               :to-equal '((467 0 (0 3))
                           (114 0 (5 8))))
       (expect (day03/read-line 1 "...*......")
-              :to-equal '((:* 0 3)))
+              :to-equal '((:* 1 3)))
       (expect (day03/read-line 4 "617*......")
               :to-equal '((617 4 (0 3))
-                          (:* 4 (4 5))))
+                          (:* 4 3)))
       (expect (day03/read-line 27 ".......755")
               :to-equal '((755 27 (7 10)))))
     (it "detects intersections correctly"
