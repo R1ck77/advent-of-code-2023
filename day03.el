@@ -93,7 +93,34 @@
 (defun day03/part-1 (lines)
   (apply #'+ (day03/-find-adjacent-numbers (day03/read-lines lines))))
 
+(defun day03/-is-gear-symbol? (symbol)
+  (eq :* (car symbol)))
+
+(defun day03/-get-gear-pivot-coords (a-x-c)
+  (-map #'rest (-filter #'day03/-is-gear-symbol? (plist-get (elt a-x-c 1) :symbols))))
+
+(defun day03/-get-numbers-near-pivot (pivot-coord numbers)
+  (-map #'car
+         (--filter (day03/intersects? (rest it) pivot-coord)
+                   numbers)))
+
+(defun day03/-get-gears (a-x-c)
+  (let* ((pivot-coords (day03/-get-gear-pivot-coords a-x-c))
+         (numbers (apply #'append (--map (plist-get it :numbers) a-x-c))))
+    (--filter (= (length it) 2)
+              (--map (day03/-get-numbers-near-pivot it numbers) pivot-coords))))
+
+(defun day03/-find-gears (data)
+  (apply #'append
+         (-map #'day03/-get-gears
+               (-partition-in-steps 3 1 (day03/-pad-data data)))))
+
+(defun day03/-combine-gear-ratios (gears)
+  (apply #'+ (--map (apply #'* it) gears)))
+
 (defun day03/part-2 (lines)
-  (error "Not yet implemented"))
+  (day03/-combine-gear-ratios
+   (day03/-find-gears
+    (day03/read-lines lines))))
 
 (provide 'day03)
