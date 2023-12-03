@@ -60,17 +60,38 @@
 
 (defun day03/read-lines (lines)
   "-> ((0 numbers symbols) (1 numbers symbols) ...)"
-  (cadr
-   (-reduce-from (lambda (acc value)
-                   (let ((row (1+ (car acc)))
-                         (data (cadr acc)))
-                     (push (day03/read-line row value) data)
-                     (list row data)))
-                 '(-1 nil)
-                 lines)))
+  (reverse
+   (cadr
+    (-reduce-from (lambda (acc value)
+                    (let ((row (1+ (car acc)))
+                          (data (cadr acc)))
+                      (push (day03/read-line row value) data)
+                      (list row data)))
+                  '(-1 nil)
+                  lines))))
+
+(defun day03/-pad-data (data)
+  (append (list (list :row -1 :numbers nil :symbols nil))
+          data
+          (list (list :row (length data) :numbers nil :symbols nil))))
+
+(defun day03/-is-number-near-symbols? (number symbols-coordinates)
+  (--any? (day03/intersects? (rest number) it)
+          symbols-coordinates))
+
+(defun day03/-get-adjacent-numbers (a-x-c)
+  (let* ((all-symbols (apply #'append (--map (plist-get it :symbols) a-x-c)))
+         (symbol-coordinates (--map (rest it) all-symbols))
+         (numbers (plist-get (elt a-x-c 1) :numbers)))
+    (-map #'car (--filter (day03/-is-number-near-symbols? it symbol-coordinates) numbers))))
+
+(defun day03/-find-adjacent-numbers (data)
+  (apply #'append
+   (-map #'day03/-get-adjacent-numbers
+         (-partition-in-steps 3 1 (day03/-pad-data data)))))
 
 (defun day03/part-1 (lines)
-  )
+  (apply #'+ (day03/-find-adjacent-numbers (day03/read-lines lines))))
 
 (defun day03/part-2 (lines)
   (error "Not yet implemented"))

@@ -18,8 +18,7 @@
                               :numbers '((617 4 (0 3)))
                               :symbols '((:* 4 3))))
       (expect (day03/read-line 27 ".......755")
-              :to-equal (list :row 27
-                              :numbers '((755 27 (7 10)))
+              :to-equal (list :row 27 :numbers '((755 27 (7 10)))
                               :symbols nil)))
     (it "detects intersections correctly"
       (expect (day03/intersects? '(0 (0 3))
@@ -31,9 +30,9 @@
     (it "replicates the example"
       (expect (day03/part-1 (advent/read-problem-lines 3 :example))
               :to-be 4361))
-    (xit "solves the problem"
+    (it "solves the problem"
       (expect (day03/part-1 (advent/read-problem-lines 3 :problem))
-              :to-be 42)))
+              :to-be 531932)))
   (xdescribe "part 2"
     (it "replicates the example"
       (expect (day03/part-2 (advent/read-problem-lines 3 :example))
