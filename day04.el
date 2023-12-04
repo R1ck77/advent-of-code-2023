@@ -20,7 +20,7 @@
 
 (defun day04/read-data (lines)
   (--map (list
-          (day04/-read-card-number (elt it 0))
+          (1- (day04/-read-card-number (elt it 0)))
           (day04/-read-winning-numbers (elt it 1))
           (day04/-read-given-numbers (elt it 2)))
          (-map #'day04/-split-tokens lines)))
@@ -39,7 +39,23 @@
                      (-map #'day04/-find-winning-numbers
                            (day04/read-data lines))))))
 
+(defun day04/-increase-owned (owned id winners)
+  (let ((factor (aref owned id)))
+    (--each (number-sequence (1+ id) (+ id winners))
+      (aset owned it (+ factor (aref owned it))))))
+
+
+(defun day04/-compute-owned (card-specs)
+  (let* ((owned (make-vector (length card-specs) 1)))
+    (--each card-specs
+      (day04/-increase-owned owned
+                             (car it) 
+                             (length (day04/-find-winning-numbers it))))
+    owned))
+
 (defun day04/part-2 (lines)
-  (error "Not yet implemented"))
+  (apply #'+ (advent/v->l
+              (day04/-compute-owned
+               (day04/read-data lines)))))
 
 (provide 'day04)
