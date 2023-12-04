@@ -25,8 +25,19 @@
           (day04/-read-given-numbers (elt it 2)))
          (-map #'day04/-split-tokens lines)))
 
+(defun day04/-find-winning-numbers (card)
+  (cl-intersection (elt card 1)
+                   (elt card 2)))
+
+(defun day04/-compute-score (n)
+  (ash 1 (1- n)))
+
 (defun day04/part-1 (lines)
-  (error "Not yet implemented"))
+  (apply #'+
+         (-map #'day04/-compute-score
+               (-map #'length
+                     (-map #'day04/-find-winning-numbers
+                           (day04/read-data lines))))))
 
 (defun day04/part-2 (lines)
   (error "Not yet implemented"))
