@@ -115,20 +115,48 @@ of a that is in b, and extra is a list of ranges not in b"
      (t (error (format "Unexpected condition %s vs %s" range-a range-b)))))
   )
 
+(defun day05/-debug-assert-intersection-range-conserved (seed rule intersection)
+  (unless (= (cdr seed)
+             (+ (or (cdr (plist-get intersection :overlap)) 0)
+                (or (apply #'+ (--map (cdr it) (plist-get intersection :extra))) 0)))
+    (error (format "Invalid intersection %s for %s" intersection seed rule)))
+  intersection)
+
 (defun day05/-intersection (range-a range-b)
   "range-a is the seed range, range-b is the rule"
+  (day05/-debug-is-valid-range? range-a)
+  (day05/-debug-is-valid-range? range-b)
   (let ((intersection (day05/-unchecked-intersection range-a range-b)))
     ;; Ensure that the intersection doesn't lose numbers along the way
-    (unless (= (cdr range-a)
-               (+ (or (cdr (car intersection)) 0)
-                  (or (apply #'+ (--map (cdr it) (cadr intersection))) 0)))
-      (error (format "Invalid intersection %s for %s and %s" intersection range-a range-b)))
-    (list :overlap (car intersection)
-          :extra (cadr intersection))))
+    (day05/-debug-assert-intersection-range-conserved range-a
+                                         range-b
+                                         (list :overlap (car intersection)
+                                               :extra (cadr intersection)))))
 
 (defun day05/-shift-range (shift range)
-  (cons (+ shift (car range))
-        (cdr range)))
+  (if range
+   (cons (+ shift (car range))
+         (cdr range))))
+
+(defun day05/-debug-assert-range-conserved (seed-range result)
+  (assert seed-range)
+  (assert (= (cdr seed-range)
+             (+ (or (cdr (plist-get result :converted)) 0)
+                (apply #'+ (-map #'cdr (plist-get result :passed))))))
+  result)
+
+(defmacro day05/-debug-is-valid-range? (range)
+  (let ((range-symbol (make-symbol "range-symbol")))
+    `(let ((,range-symbol ,range))
+       (assert (and (numberp (car ,range-symbol))
+                    (numberp (cdr ,range-symbol))))
+       ,range-symbol)))
+
+(defun day05/-debug-assert-proper-result (result)
+  (let ((converted (plist-get result :converted))
+        (passed (plist-get result :passed)))
+    (--each passed (day05/-debug-is-valid-range? it))
+    result))
 
 (defun day05/-rule-to-range-function (dest-src-len)
   (let* ((length (elt dest-src-len 2))
@@ -138,35 +166,37 @@ of a that is in b, and extra is a list of ranges not in b"
     (lambda (seed-range)
       (let ((intersection (day05/-intersection seed-range
                                                 (cons src-start length))))
-        (list :converted (day05/-shift-range shift (plist-get intersection :overlap))
+        (day05/-debug-assert-proper-result
+         (day05/-debug-assert-range-conserved
+          seed-range
+          (list :converted (day05/-shift-range shift (plist-get intersection :overlap))
               
-              :passed (plist-get intersection :extra))))))
+                :passed (plist-get intersection :extra))))))))
 
 (defun day05/-debug-ranges-size (ranges)
   (apply #'+ (-map #'cdr ranges)))
 
 (defun day05/-filter-seed-ranges (seeds-ranges rule-f)
   (let ((passed (plist-get seeds-ranges :passed))
-        (converted (plist-get seeds-ranges :converted-list))
-        (newly-passed))
-    (--each (--map (lambda (seed-range)
-                     (funcall rule-f seed-range))
-                   passed)
-      (lambda (filter-result)
-        (setq newly-passed (append newly-passed (plist-get filter-result :passed) ))
-        (push (plist-get filter-result :converted) converted))
-      (assert (>= (day05/-debug-ranges-size passed)
-                  (day05/-debug-ranges-size newly-passed))))
-    (list :passed newly-passed
-          :converted-list converted)))
+        (newly-passed)
+        (all-converted (plist-get seeds-ranges :converted-list)))
+    (let ((after-single-rule (-map (lambda (seed-range)                   
+                                     (funcall rule-f seed-range))
+                                   passed)))      
+      (-each after-single-rule
+        (lambda (rule-result)
+          (setq newly-passed (append newly-passed (plist-get rule-result :passed)))
+          (if-let ((new-converted (plist-get rule-result :converted)))
+              (push new-converted  all-converted))))
+      (list :passed newly-passed
+            :converted-list all-converted))))
 
 (defun day05/-rules-to-range-function (rules)
   (let ((rules-f (-map #'day05/-rule-to-range-function rules)))
     (lambda (seeds-range)
-      ;;; tODO/FIXME merge the passed and converted lists!
       (let ((conversion-result (-reduce-from
                                 #'day05/-filter-seed-ranges
-                                (list :passed (list seeds-range) :converted-list nil)
+                                (list :passed seeds-range :converted-list nil)
                                 rules-f)))
         (append (plist-get conversion-result :passed)
                 (plist-get conversion-result :converted-list))))))
@@ -184,9 +214,14 @@ of a that is in b, and extra is a list of ranges not in b"
           :rules (-map #'day05/-rules-to-range-function
                        (-map #'cadr (-partition 2 raw-rules))))))
 
+(defun day05/-map-seed-ranges (functional-rules)
+  (let ((seeds (plist-get functional-rules :seeds))
+        (rules (plist-get functional-rules :rules)))
+    (--reduce-from (funcall it acc) seeds rules)))
+
 (defun day05/part-2 (line-blocks)
-  (apply #'min (--map #'car
-                      (day05/-map-seeds
+  (apply #'min (-map #'car
+                      (day05/-map-seed-ranges
                        (day05/-create-range-functional-rules
                         (day05/read-rules line-blocks))))))
 
