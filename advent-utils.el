@@ -251,6 +251,7 @@ The value is binded to 'it'"
                 (funcall f123 coord (advent/grid-get grid coord ))))))
 
 (defmacro advent/-each-grid (grid &rest forms)
+  "macro version of each grid. Values are bound to it-coord and it-value"
   (declare (indent 1))
   `(advent/each-grid ,grid (lambda (it-coord it-value)
                              ,@forms)))
