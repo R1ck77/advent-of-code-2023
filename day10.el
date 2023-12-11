@@ -2,33 +2,44 @@
 (require 'advent-utils)
 (require 's)
 
-;;(setq example (advent/read-grid 10 :example #'day10/-to-symbol))
-;;(setq problem (advent/read-grid 10 :problem #'day10/-to-symbol))
-
 (defconst day10/connections (list :| '((-1 . 0) (1 . 0))
-                              :- '((0 . -1) (0 . 1))
-                              :L '((-1 . 0) (0 . 1))
-                              :J '((-1 . 0) (0 . -1))
-                              :7 '((1 . 0) (0 . -1))
-                              :F '((1 . 0) (0 . 1))
-                              :. '()
-                              :S '((-1 . 0) (1 . 0) (0 . -1) (0 . 1))))
+                                  :- '((0 . -1) (0 . 1))
+                                  :L '((-1 . 0) (0 . 1))
+                                  :J '((-1 . 0) (0 . -1))
+                                  :7 '((1 . 0) (0 . -1))
+                                  :F '((1 . 0) (0 . 1))
+                                  :. '()
+                                  :S '((-1 . 0) (1 . 0) (0 . -1) (0 . 1))))
 
 (defconst day10/pipes '(:| :- :L :J :7 :F))
 
-;;; Assumes that I'm in the lower left quadrant of a grid cell
-(defconst day10/border-score (list :| '(:h 1 :v 0)
-                                   :- '(:h 0 :v 1)                                  
-                                   :L '(:h 0 :v 0)
-                                   :J '(:h 0 :v 1)
-                                   :7 '(:h 1 :v 1)
-                                   :F '(:h 1 :v 0)))
+;;; Assumes that I'm in the lower left quadrant of a grid cell, this is the "enter cost""
+(defconst day10/border-enter-score (list :| '(:left 1 :right 0 :up 0 :down 0)
+                                         :- '(:left 0 :right 0 :up 0 :down 1)
+                                         :L '(:left 0 :right 0 :up 0 :down 0)
+                                         :J '(:left 0 :right 0 :up 0 :down 1)
+                                         :7 '(:left 1 :right 0 :up 0 :down 1)
+                                         :F '(:left 1 :right 0 :up 0 :down 0)))
+
+
+;;; Assumes that I'm in the lower left quadrant of a grid cell, this is the "exit cost"
+(defconst day10/border-exit-score (list :| '(:left 0 :right 1 :up 0 :down 0)
+                                        :- '(:left 0 :right 0 :up 1 :down 0)                                  
+                                        :L '(:left 0 :right 0 :up 0 :down 0)
+                                        :J '(:left 0 :right 0 :up 1 :down 0)
+                                        :7 '(:left 0 :right 1 :up 1 :down 0)
+                                        :F '(:left 0 :right 1 :up 0 :down 0)))
 
 (defmacro day10/with-state (state &rest body)
   (declare (indent 1))
   `(let ((grid (plist-get ,state :grid))
          (visited (plist-get ,state :visited)))
      ,@body))
+
+(defun day10/with-state-f (state f)
+  (let ((grid (plist-get state :grid))
+        (visited (plist-get state :visited)))
+    (funcall f grid visited)))
 
 (defun day10/find-S (grid)
   (let ((coord))
@@ -43,7 +54,6 @@
         (+ (cdr a)
            (cdr b))))
 
-;; TODO/FIXME slow. Cache, probably
 (defun day10/valid-coord? (grid coord)
   (let ((size (advent/get-grid-size grid))
         (row (car coord))
@@ -79,13 +89,13 @@
 (defun day10/get-viable-neighbors (state coord)
   (let ((grid (plist-get state :grid)))
     (--filter (day10/connected-to-me? grid coord it)
-           (--filter (not (day10/is-visited? state it))
-                     (day10/get-pipe-neighbors grid coord)))))
+              (--filter (not (day10/is-visited? state it))
+                        (day10/get-pipe-neighbors grid coord)))))
 
 (defun day10/finish-loop! (state coord)
   (let* ((candidates nil)
-        (visited (plist-get state :visited))
-        (current-score (advent/get visited coord)))
+         (visited (plist-get state :visited))
+         (current-score (advent/get visited coord)))
     (while (setq candidates (day10/get-viable-neighbors state coord))
       (setq coord (car candidates))
       (setq current-score (1+ current-score))
@@ -126,17 +136,35 @@
          (horizontal-path (day10/find-horizontal-path (car (last vertical-path)) to)))
     (append vertical-path (rest horizontal-path))))
 
-(defun day10/get-score-for-border-crossing (pipe direction)
-  (plist-get (or (plist-get day10/border-score pipe)
-                 '(:h 0 :v 0))
+(defun day10/invert-direction (direction)
+  (plist-get (list :left :right
+                   :right :left
+                   :up :down
+                   :down :up)
              direction))
+
+(defun day10/find-exit-direction (from to)
+  (cond
+   ((> (car to) (car from)) :down)
+   ((< (car to) (car from)) :up)
+   ((> (cdr to) (cdr from)) :right)
+   ((< (cdr to) (cdr from)) :left)))
+
+(defun day10/get-score-for-border-crossing (state from to)
+  (day10/with-state state
+    (let ((from-rule (if (advent/get visited from)
+                         (plist-get day10/border-exit-score (advent/grid-get grid from))
+                       '(:left 0 :right 0 :up 0 :down 0)))
+          (to-rule (if (advent/get visited to)
+                       (plist-get day10/border-enter-score (advent/grid-get grid to))
+                     '(:left 0 :right 0 :up 0 :down 0)))
+          (exit-direction (day10/find-exit-direction from to)))
+      (+ (plist-get from-rule exit-direction)
+         (plist-get to-rule exit-direction)))))
 
 (defun day10/crossing-score (state from to)
   (day10/with-state state
-    (if (not (numberp (advent/get visited from)))
-        0
-      (day10/get-score-for-border-crossing (advent/grid-get grid from)
-                                           (if (= (car from) (car to)) :h :v)))))
+    (day10/get-score-for-border-crossing state from to)))
 
 (defun day10/compute-crossings (state path)
   (assert (not (numberp (advent/get (plist-get state :visited) (car path)))))
@@ -145,7 +173,6 @@
 
 (defun day10/same-side? (state a b)
   "Used on two non path cells to see if they are on the same side"
-;  (message "%s -> %s   %s" a b (apply #'+ (day10/compute-crossings state (day10/find-path a b))))
   (evenp (apply #'+ (day10/compute-crossings state (day10/find-path a b)))))
 
 (defun day10/find-unvisited-border-tile (state)
@@ -162,7 +189,7 @@ In that case, the contingency plan may be to either extend the grid by 1 tile."
       (unless (or unvisited-border-cell (advent/get visited it-coord))
         (setq unvisited-border-cell it-coord)))
     (if (not unvisited-border-cell)
-      (error "Unaccounted condition: extend the grid by one row or column to fix the problem"))
+        (error "Unaccounted condition: extend the grid by one row or column to fix the problem"))
     unvisited-border-cell))
 
 (defun day10/count-external (state)
@@ -172,6 +199,8 @@ In that case, the contingency plan may be to either extend the grid by 1 tile."
         (count 0))
     (advent/-each-grid grid
       (unless (numberp (advent/get visited it-coord))
+        (assert (eq (day10/same-side? state it-coord reference-coord)
+                    (day10/same-side? state reference-coord it-coord)))
         (if (day10/same-side? state it-coord reference-coord)
             (setq count (1+ count)))))
     count))
