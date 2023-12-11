@@ -26,23 +26,24 @@
 (defun day09/-next-increment (value seq)
   (+ value (car (reverse seq))))
 
-(defun day09/compute-prediction (seq-list)
-  (-reduce-from #'day09/-next-increment 0 seq-list))
+(defun day09/compute-prediction (prediction-f seq-list)
+  (-reduce-from prediction-f 0 seq-list))
+
+(defun day09/compute-prediction-sequence (prediction-f seq-list)
+  (--map (day09/compute-prediction prediction-f it)
+         (-map #'day09/compute-subsequences seq-list)))
 
 (defun day09/part-1 (lines)
-  (apply #'+ (-map #'day09/compute-prediction
-                   (-map #'day09/compute-subsequences
-                         (day09/read-data lines)))))
+  (apply #'+ (day09/compute-prediction-sequence
+              #'day09/-next-increment
+              (day09/read-data lines))))
 
 (defun day09/-next-inverse-increment (value seq)
   (- (car seq) value))
 
-(defun day09/compute-inverse-prediction (seq-list)
-  (-reduce-from #'day09/-next-inverse-increment 0 seq-list))
-
 (defun day09/part-2 (lines)
-  (apply #'+ (-map #'day09/compute-inverse-prediction
-                   (-map #'day09/compute-subsequences
-                         (day09/read-data lines)))))
+  (apply #'+ (day09/compute-prediction-sequence
+              #'day09/-next-inverse-increment
+              (day09/read-data lines))))
 
 (provide 'day09)
