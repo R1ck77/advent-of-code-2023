@@ -2,7 +2,7 @@
 (require 'advent-utils)
 (require 's)
 
-(setq example (advent/read-grid 10 :example #'day10/-to-symbol 5))
+;;(setq example (advent/read-grid 10 :example #'day10/-to-symbol 5))
 ;;(setq problem (advent/read-grid 10 :problem #'day10/-to-symbol))
 
 (defconst day10/connections (list :| '((-1 . 0) (1 . 0))
@@ -156,9 +156,8 @@ In that case, the contingency plan may be to either extend the grid by 1 tile."
         (grid (plist-get state :grid))
         (visited (plist-get state :visited)))
     (advent/-each-grid grid
-      (unless unvisited-border-cell
-        (if (advent/get visited it-coord)
-            (setq unvisited-border-cell it-coord))))
+      (unless (or unvisited-border-cell (advent/get visited it-coord))
+        (setq unvisited-border-cell it-coord)))
     (if (not unvisited-border-cell)
       (error "Unaccounted condition: extend the grid by one row or column to fix the problem"))
     unvisited-border-cell))
