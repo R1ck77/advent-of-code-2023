@@ -17,12 +17,12 @@
         (day05/-read-values (cdr line-block))))
 
 (defun day05/-read-seeds (line)
-  (assert (s-starts-with? "seeds: " line))
+  (cl-assert (s-starts-with? "seeds: " line))
   (let ((raw-numbers (s-split " " (cadr (s-split ": " line)) t)))
    (list :seeds (-map #'string-to-number raw-numbers))))
 
 (defun day05/read-rules (line-blocks)
-  (assert (= (length line-blocks) 8))
+  (cl-assert (= (length line-blocks) 8))
   (append (day05/-read-seeds (caar line-blocks))
           (day05/-read-map (elt line-blocks 1))
           (day05/-read-map (elt line-blocks 2))
@@ -122,7 +122,7 @@ of a that is in b, and extra is a list of ranges not in b"
   (--map (cons it 1) raw-ranges))
 
 (defun day05/-create-one-range-functional-rules (rules-plist)
-    (assert (eq :seeds (car rules-plist)))
+    (cl-assert (eq :seeds (car rules-plist)))
   (let ((seeds (day05/-create-seeds-one-ranges
                 (plist-get rules-plist :seeds)))        
         (raw-rules (cddr rules-plist)))
@@ -142,7 +142,7 @@ of a that is in b, and extra is a list of ranges not in b"
          (-partition 2 raw-ranges)))
 
 (defun day05/-create-range-functional-rules (rules-plist)
-  (assert (eq :seeds (car rules-plist)))
+  (cl-assert (eq :seeds (car rules-plist)))
   (let ((seeds (day05/-create-seeds-ranges
                 (plist-get rules-plist :seeds)))        
         (raw-rules (cddr rules-plist)))

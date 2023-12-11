@@ -191,7 +191,7 @@ It binds:
 
 (defun advent/make-grid (n-rows n-columns value)
   (let ((rows (make-vector n-rows nil)))
-    (loop for row below n-rows do
+    (cl-loop for row below n-rows do
           (aset rows row (make-vector n-columns value)))
     rows))
 
@@ -203,9 +203,9 @@ It binds:
 
 (defun advent/debug-str-grid (grid &optional format)
   (let ((result ""))
-    (loop for i below (length grid) do
+    (cl-loop for i below (length grid) do
           (let ((current-row (aref grid i)))
-            (loop for j below (length current-row) do
+            (cl-loop for j below (length current-row) do
                   (setq result (concat result " " (format (or format "%s") (aref current-row j))))))
           (setq result (concat result "\n")))
     result))
@@ -225,8 +225,8 @@ It binds:
 
 (defun advent/update-grid! (grid f)
   "Update in place the value of a grid with f, which receives the current cell value as input"
-  (loop for i below (length grid) do
-        (loop for j below (length (aref grid 0)) do
+  (cl-loop for i below (length grid) do
+        (cl-loop for j below (length (aref grid 0)) do
               (advent/update-grid-value! grid (cons i j) f)))
   grid)
 
@@ -239,8 +239,8 @@ The value is binded to 'it'"
 
 ;; TODO/FIXME some serious bug here. If f contains an "f123 it's bad
 (defun advent/each-grid (grid f123)
-  (loop for i below (length grid) do
-        (loop for j below (length (aref grid 0)) do
+  (cl-loop for i below (length grid) do
+        (cl-loop for j below (length (aref grid 0)) do
               (let ((coord (cons i j)))
                 (funcall f123 coord (advent/grid-get grid coord ))))))
 
@@ -358,8 +358,8 @@ it is bound to the current row and column"
         (it (make-symbol "it")))
     `(let ((,rows (length ,grid))
            (,columns (length (aref ,grid 0))))
-       (loop for ,i from 0 below ,rows do
-             (loop for ,j from 0 below ,columns do
+       (cl-loop for ,i from 0 below ,rows do
+             (cl-loop for ,j from 0 below ,columns do
                    (let ((it (cons ,i ,j)))
                      ,@forms))))))
 
