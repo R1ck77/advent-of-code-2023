@@ -9,9 +9,9 @@
     (it "replicates the example"
       (expect (day10/part-1 (advent/read-grid 10 :example #'day10/-to-symbol))
               :to-be 8))
-    (xit "solves the problem"
+    (it "solves the problem"
       (expect (day10/part-1 (advent/read-grid 10 :problem #'day10/-to-symbol))
-              :to-be 42)))
+              :to-be 6754)))
   (xdescribe "part 2"
     (it "replicates the example"
       (expect (day10/part-2 (advent/read-grid 10 :example #'day10/-to-symbol))
