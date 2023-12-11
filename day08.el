@@ -2,8 +2,63 @@
 (require 'advent-utils)
 (require 's)
 
+(defconst day08/label "\\([A-Z]+\\)")
+
+(defconst day08/node-regex (format "%s = (%s, %s)"
+                                   day08/label
+                                   day08/label
+                                   day08/label))
+
+(defun day08/to-symbol (string)
+  (read (concat ":" string)))
+
+(defun day08/read-node-labels (node)
+  (-map #'day08/to-symbol (cdr (s-match day08/node-regex node))))
+
+(defun day08/add-node (nodes node)
+  (let ((values (day08/read-node-labels node)))
+    (advent/put nodes
+                (car values)
+                (cons (elt values 1)
+                      (elt values 2)))))
+
+
+(defun day08/read-nodes (lines)
+  (let ((nodes (advent/table)))    
+    (--each lines (day08/add-node nodes it))
+    nodes))
+
+(defun day08/read-instructions (line)
+  (-map #'day08/to-symbol (s-split "" line t)))
+
+(defun day08/read-data (lines)
+  (list :lr (day08/read-instructions (car lines))
+        :nodes (day08/read-nodes (cdr lines))))
+
+(setq example (day08/read-data (advent/read-problem-lines 8 :example)))
+(setq problem (day08/read-data (advent/read-problem-lines 8 :problem)))
+
+(defun day08/dir-func (direction)
+  (case direction
+    (:L #'car)
+    (:R #'cdr)))
+
+(defun day08/next-node (nodes current direction)
+  (let ((l+r (advent/get nodes current)))
+    (funcall (day08/dir-func direction) l+r)))
+
+(defun day08/to-zzz! (data)
+  (let ((current :AAA)
+        (lr (-cycle (plist-get data :lr)))
+        (nodes (plist-get data :nodes))
+        (count 1))
+    (while (not (eq :ZZZ (setq current (day08/next-node nodes current (pop lr)))))
+      (setq count (1+ count)))
+    count))
+
+
 (defun day08/part-1 (lines)
-  (error "Not yet implemented"))
+  (day08/to-zzz! (day08/read-data lines)))
 
 (defun day08/part-2 (lines)
   (error "Not yet implemented"))
