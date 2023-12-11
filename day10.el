@@ -2,7 +2,7 @@
 (require 'advent-utils)
 (require 's)
 
-;;(setq example (advent/read-grid 10 :example #'day10/-to-symbol))
+(setq example (advent/read-grid 10 :example #'day10/-to-symbol 5))
 ;;(setq problem (advent/read-grid 10 :problem #'day10/-to-symbol))
 
 (defconst day10/connections (list :| '((-1 . 0) (1 . 0))
@@ -17,12 +17,18 @@
 (defconst day10/pipes '(:| :- :L :J :7 :F))
 
 ;;; Assumes that I'm in the lower left quadrant of a grid cell
-(defconst day10/border-score '(:|
-                               :- 0
-                               :L 0
-                               :J
-                               :7 1
-                               :F 1))
+(defconst day10/border-score (list :| '(:h 1 :v 0)
+                                   :- '(:h 0 :v 1)                                  
+                                   :L '(:h 0 :v 0)
+                                   :J '(:h 0 :v 1)
+                                   :7 '(:h 1 :v 1)
+                                   :F '(:h 1 :v 0)))
+
+(defmacro day10/with-state (state &rest body)
+  (declare (indent 1))
+  `(let ((grid (plist-get ,state :grid))
+         (visited (plist-get ,state :visited)))
+     ,@body))
 
 (defun day10/find-S (grid)
   (let ((coord))
@@ -120,16 +126,24 @@
          (horizontal-path (day10/find-horizontal-path (car (last vertical-path)) to)))
     (append vertical-path (rest horizontal-path))))
 
-(defun day10/compute-crossed-score (state coord)
-  (let ((grid (plist-get state :grid))
-        (visited (plist-get state :visited)))
-    (if (advent/get visited coord) 1 0)))
+(defun day10/get-score-for-border-crossing (pipe direction)
+  (plist-get (plist-get day10/border-score pipe) direction))
+
+(defun day10/crossing-score (state from to)
+  (day10/with-state state
+    (if (not (numberp (advent/get visited from)))
+        0
+      (day10/get-score-for-border-crossing (advent/grid-get grid from)
+                                           (if (= (car from) (car to)) :h :v)))))
+
+(defun day10/compute-crossings (state path)
+  (assert (not (numberp (advent/get (plist-get state :visited) (car path)))))
+  (--map (day10/crossing-score state (car it) (cadr it))
+         (-partition-in-steps 2 1 path)))
 
 (defun day10/same-side? (state a b)
   "Used on two non path cells to see if they are on the same side" 
-  (let ((visited-path (--map (day10/compute-crossed-score state it)
-                             (day10/find-path a b))))
-    (evenp (apply #'+ (--filter #'numberp visited-path )))))
+  (evenp (apply #'+ (day10/compute-crossings state (day10/find-path a b)))))
 
 (defun day10/find-unvisited-border-tile (state)
   "Find any tile on the border that doesn't belong to the path.
@@ -165,13 +179,6 @@ In that case, the contingency plan may be to either extend the grid by 1 tile."
     (- (* (car grid-size) (cdr grid-size))
        (advent/table-size (plist-get state :visited))
        (day10/count-external state))))
-
-(defmacro day10/with-state (state &rest body)
-  (declare (indent 1))
-  `(let ((grid (plist-get ,state :grid))
-         (visited (plist-get ,state :visited)))
-     ,@body))
-
 
 (defun day10/find-S-legs (state)
   (day10/with-state state
