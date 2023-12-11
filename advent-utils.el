@@ -154,10 +154,10 @@ It binds:
 
 (defun advent/iterate (f initial-value n)
   (let ((value initial-value))
-   (while (> n 0)
-     (setq value (funcall f value))
-     (setq n (1- n)))
-   value))
+    (while (> n 0)
+      (setq value (funcall f value))
+      (setq n (1- n)))
+    value))
 
 (defun advent/compute-input-name (day type &optional part)
   (let ((part-name (or (and part (format "-part%d" part)) "")))
@@ -187,7 +187,7 @@ It binds:
 
 (defun advent/read-grid (day type &optional conversion-f)
   (advent/lines-to-grid (advent/read-problem-lines day type)
-                                        conversion-f))
+                        conversion-f))
 
 (defun advent/make-grid (n-rows n-columns value)
   (let ((rows (make-vector n-rows nil)))
@@ -206,7 +206,7 @@ It binds:
     (loop for i below (length grid) do
           (let ((current-row (aref grid i)))
             (loop for j below (length current-row) do
-                 (setq result (concat result " " (format (or format "%s") (aref current-row j))))))
+                  (setq result (concat result " " (format (or format "%s") (aref current-row j))))))
           (setq result (concat result "\n")))
     result))
 
@@ -214,7 +214,7 @@ It binds:
   (let ((i (car coord))
         (j (cdr coord)))
     (let* ((old-value (aref (aref grid i) j))
-          (new-value (funcall f old-value)))
+           (new-value (funcall f old-value)))
       (aset (aref grid i) j new-value)
       new-value)))
 
@@ -306,13 +306,45 @@ The value is binded to 'it'"
           (cons end end-value)))
     (let ((center (floor (/ (+ end start) 2))))
       (let ((center-val (funcall f center))
-                (right-val (funcall f (1+ center))))
-            (cond
-             ((> right-val center-val)
-              (advent/bogus-gradient start center f))
-             ((< right-val center-val)
-              (advent/bogus-gradient center end f))
-             (t (error "This is weird…")))))))
+            (right-val (funcall f (1+ center))))
+        (cond
+         ((> right-val center-val)
+          (advent/bogus-gradient start center f))
+         ((< right-val center-val)
+          (advent/bogus-gradient center end f))
+         (t (error "This is weird…")))))))
+
+
+(defun advent/--bisect-step (from to f)
+  (unless (funcall f to)
+    (error (format "Invalid extreme %s" to)))
+  (cond
+   ((= from to)
+    (list from nil))
+   ((funcall f from)
+    (list from nil))
+   ((= (1+ from) to)
+    (list to nil))
+   (t (let* ((half-point (/ (+ from to) 2))
+             (half-result (funcall f half-point)))
+        (if half-result
+            (list nil from half-point)
+          (list nil half-point to))))))
+
+(defun advent/bisect (from to f)
+  "Returns the first value in [from to] where f changes from nil to a truthy value.
+
+It's supposed to work on integers
+
+As expected, if there are multiple changes of 'sign', the algorithm will return a non specified one"
+  (let ((current-result ))
+    (while (not (car (setq current-result (advent/--bisect-step from to f))))      
+      (setq from (elt current-result 1))
+      (setq to (elt current-result 2)))
+    (car current-result)))
+
+
+
 
 (defmacro advent/loop-grid (grid &rest forms)
   "Non-hygienic macro that bind all coordinates of the grid to 'it'
@@ -324,12 +356,12 @@ it is bound to the current row and column"
         (i (make-symbol "i"))
         (j (make-symbol "j"))
         (it (make-symbol "it")))
-   `(let ((,rows (length ,grid))
-          (,columns (length (aref ,grid 0))))
-      (loop for ,i from 0 below ,rows do
-            (loop for ,j from 0 below ,columns do
-                  (let ((it (cons ,i ,j)))
-                    ,@forms))))))
+    `(let ((,rows (length ,grid))
+           (,columns (length (aref ,grid 0))))
+       (loop for ,i from 0 below ,rows do
+             (loop for ,j from 0 below ,columns do
+                   (let ((it (cons ,i ,j)))
+                     ,@forms))))))
 
 (defmacro advent/time (&rest forms)
   "Time the forms and return a cons with the time in ms and the result"
