@@ -76,27 +76,27 @@
   (-filter #'day08/is-starting-point?
            (advent/-map-hash (day08/nodes data) it-key)))
 
-(defun day08/find-steps-for-3-ends (start data)
-  "Get to the end 3 times, return the steps required"
+(defun day08/find-steps-for-2-ends (start data)
+  "Get to the end 2 times, return the steps required"
   (let ((lr (day08/lr data))
         (nodes (day08/nodes data))
         (current start)
         (step 0)
         (ends nil))
-    (while (< (length ends) 3)
+    (while (< (length ends) 2)
       (setq step (1+ step))
       (setq current (day08/next-node nodes current (pop lr)))
       (when (day08/is-ending-point? current)
-        (push step ends)
+        (push (cons current step) ends)
         (sit-for 0)))
     (reverse ends)))
 
 (defun day08/find-period (start data)
-  (let* ((times (day08/find-steps-for-3-ends start data))
+  (let* ((times (day08/find-steps-for-2-ends start data))
          (candidate (car times)))
-    (assert (= (* 2 candidate) (elt times 1)))
-    (assert (= (* 3 candidate) (elt times 2)))
-    candidate))
+    ;; Ensure that my hypotesis that there are no multiple ends
+    (assert (eq (car candidate) (car (cadr times))))
+    (cdr candidate)))
 
 (defun day08/find-periods (data)
   (--map (day08/find-period it data) (day08/get-starting-points data)))
