@@ -400,4 +400,12 @@ it is bound to the current row and column"
                          (redisplay)
                          (cons 0 now)))))
 
+(defun advent/cache-f (f)
+  (lexical-let ((cache (advent/table)))
+    (lambda (value)
+      (or (advent/get cache value)
+          (let ((result (funcall f value)))
+            (advent/put cache value result)
+            result)))))
+
 (provide 'advent-utils)
