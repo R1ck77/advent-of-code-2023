@@ -45,19 +45,18 @@
   (length (--filter (and (>= it from)
                          (<= it to))  (advent/-map-hash stars it-key))))
 
-(defun day11/a-b-distance (a b stars &optional factor)
+(defun day11/a-b-distance (factor a b stars)
   (if (= a b) 0
-    (let* ((factor (or factor 2))
-           (from (min a b))
+    (let* ((from (min a b))
            (to (max a b))
            (unexpanded-tiles (and 0 (day11/count-unexpanded-space stars from to))))
       (1+ (- (* (- to from) factor)
              (* (1- factor) unexpanded-tiles))))))
 
-(defun day11/find-distance (data star-a star-b)
+(defun day11/find-distance (factor data star-a star-b)
   "Distance between two stars."
-  (let ((vertical-distance (day11/a-b-distance (car star-a) (car star-b) (plist-get data :star-rows)))
-        (horizontal-distance (day11/a-b-distance (cdr star-a) (cdr star-b) (plist-get data :star-columns))))
+  (let ((vertical-distance (day11/a-b-distance factor (car star-a) (car star-b) (plist-get data :star-rows)))
+        (horizontal-distance (day11/a-b-distance factor (cdr star-a) (cdr star-b) (plist-get data :star-columns))))
     (comment
      (message "H:%s + V:%s -> %s"
               horizontal-distance
@@ -65,19 +64,19 @@
               (+ vertical-distance horizontal-distance)))
     (+ vertical-distance horizontal-distance)))
 
-(defun day11/all-distances (data)
+(defun day11/all-distances (factor data)
   (let ((sum 0)
         (stars (plist-get data :stars)))
     (while stars
       (--each (rest stars)
-        (setq sum (+ sum (day11/find-distance data (car stars) it))))
+        (setq sum (+ sum (day11/find-distance factor data (car stars) it))))
       (pop stars))
     sum))
 
 (defun day11/part-1 (grid)
-  (day11/all-distances (day11/analyze-space (day11/read-data grid))))
+  (day11/all-distances 2 (day11/analyze-space (day11/read-data grid))))
 
-(defun day11/part-2 (lines)
-  (error "Not yet implemented"))
+(defun day11/part-2 (grid)
+  (day11/all-distances 1000000 (day11/analyze-space (day11/read-data grid))))
 
 (provide 'day11)
