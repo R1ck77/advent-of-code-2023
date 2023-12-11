@@ -2,7 +2,7 @@
 (require 'advent-utils)
 (require 's)
 
-;;(setq example (advent/read-grid 10 :example #'day10/-to-symbol 5))
+;;(setq example (advent/read-grid 10 :example #'day10/-to-symbol))
 ;;(setq problem (advent/read-grid 10 :problem #'day10/-to-symbol))
 
 (defconst day10/connections (list :| '((-1 . 0) (1 . 0))
@@ -127,7 +127,9 @@
     (append vertical-path (rest horizontal-path))))
 
 (defun day10/get-score-for-border-crossing (pipe direction)
-  (plist-get (plist-get day10/border-score pipe) direction))
+  (plist-get (or (plist-get day10/border-score pipe)
+                 '(:h 0 :v 0))
+             direction))
 
 (defun day10/crossing-score (state from to)
   (day10/with-state state
@@ -142,7 +144,8 @@
          (-partition-in-steps 2 1 path)))
 
 (defun day10/same-side? (state a b)
-  "Used on two non path cells to see if they are on the same side" 
+  "Used on two non path cells to see if they are on the same side"
+;  (message "%s -> %s   %s" a b (apply #'+ (day10/compute-crossings state (day10/find-path a b))))
   (evenp (apply #'+ (day10/compute-crossings state (day10/find-path a b)))))
 
 (defun day10/find-unvisited-border-tile (state)

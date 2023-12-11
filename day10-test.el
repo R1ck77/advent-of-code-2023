@@ -13,7 +13,7 @@
       (expect (day10/part-1 (advent/read-grid 10 :problem #'day10/-to-symbol))
               :to-be 6754)))
   (describe "part 2"
-    (it "replicates the example (example 1"
+    (it "replicates the example (example 1)"
       (expect (day10/part-2 (advent/read-grid 10 :example #'day10/-to-symbol))
               :to-be 1))
     (it "replicates the example (example 2)"
