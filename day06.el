@@ -29,6 +29,8 @@
          (day06/read-data lines))))
 
 (defun day06/part-2 (lines)
-  (error "Not yet implemented"))
+  (apply #'*
+         (-map #'day06/compute-win-chances
+               (day06/read-data (--map (s-replace " " "" it) lines)))))
 
 (provide 'day06)
