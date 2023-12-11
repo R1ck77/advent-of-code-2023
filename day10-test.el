@@ -12,10 +12,19 @@
     (it "solves the problem"
       (expect (day10/part-1 (advent/read-grid 10 :problem #'day10/-to-symbol))
               :to-be 6754)))
-  (xdescribe "part 2"
-    (it "replicates the example"
+  (describe "part 2"
+    (it "replicates the example (example 1"
       (expect (day10/part-2 (advent/read-grid 10 :example #'day10/-to-symbol))
-              :to-be 42))
+              :to-be 1))
+    (it "replicates the example (example 2)"
+      (expect (day10/part-2 (advent/read-grid 10 :example #'day10/-to-symbol 2))
+              :to-be 4))
+    (it "replicates the example (example 3)"
+      (expect (day10/part-2 (advent/read-grid 10 :example #'day10/-to-symbol 3))
+              :to-be 10))
+    (it "replicates the example (example 4)"
+      (expect (day10/part-2 (advent/read-grid 10 :example #'day10/-to-symbol 4))
+              :to-be 8))
     (xit "solves the problem"
       (expect (day10/part-2 (advent/read-grid 10 :problem #'day10/-to-symbol))
               :to-be 42))))
