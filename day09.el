@@ -34,12 +34,15 @@
                    (-map #'day09/compute-subsequences
                          (day09/read-data lines)))))
 
-(setq example (day09/read-data (advent/read-problem-lines 9 :example)))
-(setq problem (day09/read-data (advent/read-problem-lines 9 :problem)))
+(defun day09/-next-inverse-increment (value seq)
+  (- (car seq) value))
 
-
+(defun day09/compute-inverse-prediction (seq-list)
+  (-reduce-from #'day09/-next-inverse-increment 0 seq-list))
 
 (defun day09/part-2 (lines)
-  (error "Not yet implemented"))
+  (apply #'+ (-map #'day09/compute-inverse-prediction
+                   (-map #'day09/compute-subsequences
+                         (day09/read-data lines)))))
 
 (provide 'day09)
