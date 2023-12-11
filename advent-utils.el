@@ -27,6 +27,9 @@ If arg is nil, returns nil without evaluating anything else"
 (defun advent/v->l (vector)
   (append vector '()))
 
+;;;;;;;;;;;;;;;;;;;
+;;; TABLE FUNCTIONS
+
 (defun advent/table ()
   (make-hash-table :test #'equal))
 
@@ -141,6 +144,9 @@ It binds:
   "Returns the number of elements in a table"
   (hash-table-count table))
 
+;;;;;;;;;;;;;;;;;;
+;;; GRID FUNCTIONS
+
 (defun advent/get-grid-size (grid)
   (cons (length grid)
         (length (aref grid 0))))
@@ -185,8 +191,8 @@ It binds:
          (--map (advent/read--grid-line it (or conversion-f #'string-to-number))
                 lines)))
 
-(defun advent/read-grid (day type &optional conversion-f)
-  (advent/lines-to-grid (advent/read-problem-lines day type)
+(defun advent/read-grid (day type &optional conversion-f part)
+  (advent/lines-to-grid (advent/read-problem-lines day type part)
                         conversion-f))
 
 (defun advent/make-grid (n-rows n-columns value)
@@ -254,6 +260,9 @@ The value is binded to 'it'"
 
 (defun advent/grid-get (grid row-column)
   (aref (aref grid (car row-column)) (cdr row-column)))
+
+;;;;;;;;;;;;;;;;;;;
+;;; PROBLEM READERS
 
 (defun advent/read-problem-numbers-line (day type)
   (-map #'string-to-number
