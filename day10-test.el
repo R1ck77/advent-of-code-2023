@@ -31,6 +31,6 @@
     (it "replicates the example (example 6)"
       (expect (day10/part-2 (advent/read-grid 10 :example #'day10/-to-symbol 6))
               :to-be 0))    
-    (xit "solves the problem"
+    (it "solves the problem"
       (expect (day10/part-2 (advent/read-grid 10 :problem #'day10/-to-symbol))
-              :to-be 42))))
+              :to-be 567))))
