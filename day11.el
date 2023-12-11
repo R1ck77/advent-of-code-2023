@@ -2,21 +2,12 @@
 (require 'advent-utils)
 (require 's)
 
-
-
-
 (defun day11/read-data (grid)
   (let ((stars))
    (advent/-each-grid grid
      (if (eq it-value :\#)
          (push it-coord stars)))
    stars))
-
-(defun day11/-to-symbol (s)
-  (intern (concat ":" s)))
-(setq example (day11/read-data (advent/read-grid 11 :example #'day11/-to-symbol)))
-(setq problem (day11/read-data (advent/read-grid 11 :problem #'day11/-to-symbol)))
-
 
 (defun day11/find-star-coordinate (stars type)
   (let ((extract-f (if (eq type :row) #'car #'cdr))
@@ -49,19 +40,15 @@
   (if (= a b) 0
     (let* ((from (min a b))
            (to (max a b))
-           (unexpanded-tiles (and 0 (day11/count-unexpanded-space stars from to))))
-      (1+ (- (* (- to from) factor)
-             (* (1- factor) unexpanded-tiles))))))
+           (distance (1+ (- to from)))
+           (unexpanded-tiles (day11/count-unexpanded-space stars from to))
+           (expanded-tiles (- distance unexpanded-tiles)))
+      (1- (+ unexpanded-tiles (* factor expanded-tiles))))))
 
 (defun day11/find-distance (factor data star-a star-b)
   "Distance between two stars."
   (let ((vertical-distance (day11/a-b-distance factor (car star-a) (car star-b) (plist-get data :star-rows)))
         (horizontal-distance (day11/a-b-distance factor (cdr star-a) (cdr star-b) (plist-get data :star-columns))))
-    (comment
-     (message "H:%s + V:%s -> %s"
-              horizontal-distance
-              vertical-distance
-              (+ vertical-distance horizontal-distance)))
     (+ vertical-distance horizontal-distance)))
 
 (defun day11/all-distances (factor data)
