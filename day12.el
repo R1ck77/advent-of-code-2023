@@ -5,11 +5,18 @@
 (defun day12/read-digits (s)
   (-map #'string-to-number (s-split "," s)))
 
+(defun day12/create-regex (digits)
+  (concat "^[.?]*"
+          (apply #'concat(-interpose "[.?]+"
+                                     (--map (format "[#?]\\{%d\\}" it) digits)))
+          "[.?]*$"))
+
 (defun day12/read-line (line)
   (let* ((tokens (s-split " " line))
          (digits (day12/read-digits (cadr tokens))))
     (list :s (car tokens)
-          :digits digits)))
+          :digits digits
+          :regex (day12/create-regex digits))))
 
 (defun day12/read-data (lines)
   (-map #'day12/read-line lines))
@@ -39,33 +46,12 @@
       (-map #'length
             (s-split "[.]+" solved-part t))))
 
-(defun day12/next-digit (digit digits)
-  (if-let ((index (-elem-index digit digits)))
-      (list index (cadr (-split-at (1+ index) digits)))
-    nil))
-
-(defun day12/compatible-minor? (sample digits)
-  (let ((current digits)
-        (compatible t))
-    (while sample
-      (if-let ((pos-rest (day12/next-digit (pop sample) current)))
-          (setq current (cadr pos-rest))
-        (setq sample nil)
-        (setq compatible nil)))
-    compatible))
-
-(defun day12/experiment (data)
-  (let* ((s (plist-get data :s))
-         (digits (plist-get data :digits))
-         (sure-candidates  (-map #'length (--filter (s-match "^#*$" it) (s-split "[.]" s t)))))
-    (if (day12/is-complete? data)
-        (equal sure-candidates digits)
-      (day12/compatible-minor? sure-candidates digits))))
-
 (defun day12/is-compatible? (data)
-;;  (message "%s -> %s" data (day12/experiment data))
-  (day12/experiment data))
+  (s-match (plist-get data :regex)
+           (plist-get data :s)))
 
+(defun day12/experiment (s)
+  (s-split "[.]" s t))
 
 (defun day12/replace-at (s index new-value)
   (let ((new-string (copy-sequence s)))
@@ -75,12 +61,14 @@
 (defun days12/get-alternatives (data)
   (cl-assert (not (day12/is-complete? data)))
   (let ((s (plist-get data :s))
-        (digits (plist-get data :digits)))
+        (digits (plist-get data :digits))
+        (regex (plist-get data :regex)))
     (let ((first-? (s-index-of "?" s)))
       (cl-assert first-?)      
       (-filter #'day12/is-compatible?
                (--map (list :s it
-                            :digits digits)
+                            :digits digits
+                            :regex regex)
                       (list (day12/replace-at s first-? "#")
                             (day12/replace-at s first-? ".")))))))
 
@@ -107,7 +95,8 @@
 (defun day12/unfold (data)
   (let ((digits (apply #'append (-repeat 5 (plist-get data :digits)))))
    (list :s (apply #'concat (-interpose "?" (-repeat 5 (plist-get data :s))))
-         :digits digits)))
+         :digits digits
+         :regex (day12/create-regex digits))))
 
 (defun day12/part-2 (lines)
   (day12/sum-all-combinations
