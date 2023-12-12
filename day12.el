@@ -5,19 +5,9 @@
 (defun day12/read-digits (s)
   (-map #'string-to-number (s-split "," s)))
 
-(defun day12/s-to-symbol (s)
-  (cond
-   ((string= "?" s) :x)
-   ((string= "#" s) :s)
-    ((string= "." s) :empty)))
-
-(defun day12/read-glyphs (s)
-  (-map #'day12/s-to-symbol
-        (s-split "" s t)))
-
 (defun day12/read-line (line)
   (let ((tokens (s-split " " line)))
-    (list :glyphs (day12/read-glyphs (car tokens))
+    (list :s (car tokens)
           :digits (day12/read-digits (cadr tokens)))))
 
 (defun day12/read-data (lines)
@@ -27,67 +17,70 @@
 (setq problem (day12/read-data (advent/read-problem-lines 12 :problem)))
 
 (defun day12/is-complete? (data)
-  (not (-contains? (plist-get data :glyphs) :x)))
+  (not (s-contains? "?" (plist-get data :s))))
 
-(defun day12/take-solved-part (data)
-  (--take-while (not (eq it :x))
-                (plist-get data :glyphs)))
+(defun day12/empty-to-nil (s)
+  (unless (s-blank? s) s))
 
-(defun day12/is-spring? (value)
-  (eq value :s))
+(defun day12/drop-last-spring (s)
+  (s-reverse (cadr (s-match "#*\\(.*\\)" (s-reverse s)))))
 
-(defun day12/is-space? (value)
-  (eq value :empty))
-
-(defun day12/drop-non-spring (glyphs)
-  (--drop-while (not (eq it :s)) glyphs))
-
-(defun day12/take-spring-part (glyphs)
-  "Returns the number of removed parts, and the rest of the glyphs"
-  (let ((springs (length (-take-while #'day12/is-spring? glyphs))))
-    (list springs
-          (-drop springs glyphs))))
+(defun day12/get-useful-part (s)
+  ;;; TODO/FIXME investigate plet better
+  (pcase-let ((`(ignore ,start ,rest) (s-match "\\([^?]*\\)\\(.*\\)" s)))
+    (unless (s-blank? start)
+      (if (s-starts-with? "?" rest)
+          (day12/empty-to-nil (day12/drop-last-spring start))
+        start))))
 
 (defun day12/find-springs (data)
-  (let ((rsprings)
-        (glyphs (plist-get data :glyphs)))
-    (while glyphs
-      (let ((space-removed (-drop-while #'day12/is-space? glyphs)))
-        (if (eq (car space-removed) :empty)
-            (setq glyphs nil)
-          (let ((springs-rest (day12/take-spring-part space-removed)))
-            (if (eq :empty (caadr springs-rest))
-                (setq glyphs nil)
-              (setq glyphs (cadr springs-rest))
-              (push (car springs-rest rsprings))
-                )
-            )
-          )
-        )      
-      )
-    (reverse rsprings)))
+  (if-let ((solved-part (day12/get-useful-part (plist-get data :s))))
+      (-map #'length
+            (s-split "[.]+" solved-part t))))
 
 (defun day12/is-compatible? (data)
+  ;;; Very very loose. "###########? 3" is not caught…
   (let ((score (day12/find-springs data))
         (digits (plist-get data :digits)))
-    ;;; missing check for completeness!
-    (unless (> (length score) (length digits))
-      (--all? (eq (car it) (cdr it))
-              (-zip score digits)))))
+    (if (day12/is-complete? data)
+        (equal score digits)
+;;; missing check for completeness!
+      (unless (> (length score) (length digits))
+        (--all? (eq (car it) (cdr it))
+                (-zip score digits))))))
 
-(defun day12/get-alternatives (data)
+(defun day12/replace-at (s index new-value)
+  (let ((new-string (copy-sequence s)))
+    (aset new-string index (string-to-char new-value))
+    new-string))
+
+(defun days12/get-alternatives (data)
   (cl-assert (not (day12/is-complete? data)))
-  (let ((glyphs (plist-get data :glyphs))
+  (let ((s (plist-get data :s))
         (digits (plist-get data :digits)))
-    (-filter #'day12/is-compatible?
-             (--map (list :glyphs it
-                          :digits digits)
-                    (list (-replace-first :x :s glyphs)
-                          (-replace-first :x :empty glyphs))))))
+    (let ((first-? (s-index-of "?" s)))
+      (cl-assert first-?)      
+      (-filter #'day12/is-compatible?
+               (--map (list :s it
+                            :digits digits)
+                      (list (day12/replace-at s first-? "#")
+                            (day12/replace-at s first-? ".")))))))
+
+(defun day12/find-combinations (data)
+  (if (day12/is-complete? data)
+      (list data)
+    (let ((new-combinations (days12/get-alternatives data)))
+      (apply #'append (-map #'day12/find-combinations new-combinations)))))
+
+(defun day12/count-combinations (data)
+  (length (day12/find-combinations data)))
+
+(defun day12/sum-all-combinations (data)
+  (--map (length (day12/find-combinations it)) data))
 
 
 (defun day12/part-1 (lines)
-  (error "Not yet implemented"))
+  (apply #'+ (day12/sum-all-combinations (day12/read-data lines))))
 
 (defun day12/part-2 (lines)
   (error "Not yet implemented"))
