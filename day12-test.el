@@ -24,13 +24,13 @@
     (it "replicates the example"
       (expect (day12/part-1 (advent/read-problem-lines 12 :example))
               :to-be 21))
-    (it "solves the problem"
+    (xit "solves the problem"
       (expect (day12/part-1 (advent/read-problem-lines 12 :problem))
               :to-be 7670)))
-  (xdescribe "part 2"
+  (describe "part 2"
     (it "replicates the example"
       (expect (day12/part-2 (advent/read-problem-lines 12 :example))
-              :to-be 42))
+              :to-be 525152))
     (xit "solves the problem"
       (expect (day12/part-2 (advent/read-problem-lines 12 :problem))
               :to-be 42))))

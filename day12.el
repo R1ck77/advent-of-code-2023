@@ -76,13 +76,24 @@
   (length (day12/find-combinations data)))
 
 (defun day12/sum-all-combinations (data)
-  (--map (length (day12/find-combinations it)) data))
+  (let ((sum 0))
+    (--each data
+      (message "Processing %s" (plist-get it :s))
+      (setq sum (+ sum (length (day12/find-combinations it)))))
+    sum))
 
 
 (defun day12/part-1 (lines)
-  (apply #'+ (day12/sum-all-combinations (day12/read-data lines))))
+  (day12/sum-all-combinations
+   (day12/read-data lines)))
+
+(defun day12/unfold (data)
+  (list :s (s-repeat 5 (plist-get data :s))
+        :digits (apply #'append (-repeat 5 (plist-get data :digits)))))
 
 (defun day12/part-2 (lines)
-  (error "Not yet implemented"))
+  (day12/sum-all-combinations
+   (-map #'day12/unfold
+    (day12/read-data lines))))
 
 (provide 'day12)
