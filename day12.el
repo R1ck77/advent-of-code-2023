@@ -5,10 +5,18 @@
 (defun day12/read-digits (s)
   (-map #'string-to-number (s-split "," s)))
 
+(defun day12/create-regex (digits)
+  (concat "^[.?]*"
+          (apply #'concat(-interpose "[.?]+"
+                                     (--map (format "[#?]\\{%d\\}" it) digits)))
+          "[.?]*$"))
+
 (defun day12/read-line (line)
-  (let ((tokens (s-split " " line)))
+  (let* ((tokens (s-split " " line))
+         (digits (day12/read-digits (cadr tokens))))
     (list :s (car tokens)
-          :digits (day12/read-digits (cadr tokens)))))
+          :digits digits
+          :regex (day12/create-regex digits))))
 
 (defun day12/read-data (lines)
   (-map #'day12/read-line lines))
@@ -39,15 +47,8 @@
             (s-split "[.]+" solved-part t))))
 
 (defun day12/is-compatible? (data)
-  ;;; Very very loose. "###########? 3" is not caught…
-  (let ((score (day12/find-springs data))
-        (digits (plist-get data :digits)))
-    (if (day12/is-complete? data)
-        (equal score digits)
-;;; missing check for completeness!
-      (unless (> (length score) (length digits))
-        (--all? (eq (car it) (cdr it))
-                (-zip score digits))))))
+  (s-match (plist-get data :regex)
+           (plist-get data :s)))
 
 (defun day12/replace-at (s index new-value)
   (let ((new-string (copy-sequence s)))
@@ -57,12 +58,14 @@
 (defun days12/get-alternatives (data)
   (cl-assert (not (day12/is-complete? data)))
   (let ((s (plist-get data :s))
-        (digits (plist-get data :digits)))
+        (digits (plist-get data :digits))
+        (regex (plist-get data :regex)))
     (let ((first-? (s-index-of "?" s)))
       (cl-assert first-?)      
       (-filter #'day12/is-compatible?
                (--map (list :s it
-                            :digits digits)
+                            :digits digits
+                            :regex regex)
                       (list (day12/replace-at s first-? "#")
                             (day12/replace-at s first-? ".")))))))
 
@@ -78,18 +81,19 @@
 (defun day12/sum-all-combinations (data)
   (let ((sum 0))
     (--each data
-      (message "Processing %s" (plist-get it :s))
+      (message "Processing %s %s" (plist-get it :s) (plist-get it :digits))
       (setq sum (+ sum (length (day12/find-combinations it)))))
     sum))
-
 
 (defun day12/part-1 (lines)
   (day12/sum-all-combinations
    (day12/read-data lines)))
 
 (defun day12/unfold (data)
-  (list :s (s-repeat 5 (plist-get data :s))
-        :digits (apply #'append (-repeat 5 (plist-get data :digits)))))
+  (let ((digits (apply #'append (-repeat 5 (plist-get data :digits)))))
+   (list :s (s-repeat 5 (plist-get data :s))
+         :digits digits
+         :regex (day12/create-regex digits))))
 
 (defun day12/part-2 (lines)
   (day12/sum-all-combinations
