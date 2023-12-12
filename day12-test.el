@@ -24,7 +24,7 @@
     (it "replicates the example"
       (expect (day12/part-1 (advent/read-problem-lines 12 :example))
               :to-be 21))
-    (xit "solves the problem"
+    (it "solves the problem"
       (expect (day12/part-1 (advent/read-problem-lines 12 :problem))
               :to-be 7670)))
   (describe "part 2"
@@ -46,7 +46,7 @@
     (it "computes the right arrangements for '?###???????? 3,2,1'"
       (expect (day12/count-combinations (day12/unfold (day12/read-line "?###???????? 3,2,1")))
               :to-be 506250))    
-    (xit "replicates the example"
+    (it "replicates the example"
       (expect (day12/part-2 (advent/read-problem-lines 12 :example))
               :to-be 525152))
     (xit "solves the problem"

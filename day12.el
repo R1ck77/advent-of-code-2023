@@ -50,6 +50,9 @@
   (s-match (plist-get data :regex)
            (plist-get data :s)))
 
+(defun day12/experiment (s)
+  (s-split "[.]" s t))
+
 (defun day12/replace-at (s index new-value)
   (let ((new-string (copy-sequence s)))
     (aset new-string index (string-to-char new-value))
@@ -91,7 +94,7 @@
 
 (defun day12/unfold (data)
   (let ((digits (apply #'append (-repeat 5 (plist-get data :digits)))))
-   (list :s (s-repeat 5 (plist-get data :s))
+   (list :s (apply #'concat (-interpose "?" (-repeat 5 (plist-get data :s))))
          :digits digits
          :regex (day12/create-regex digits))))
 
