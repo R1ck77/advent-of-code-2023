@@ -58,19 +58,29 @@
     (aset new-string index (string-to-char new-value))
     new-string))
 
+(defun day12/random-? (s)
+  (let ((q-marks (--find-indices (string= "?" it) (s-split "" s t))) )
+    (elt q-marks (random (length q-marks)))))
+
+(defun day12/first-? (s)
+  (s-index-of "?" s))
+
+(defun day12/select-next-?-to-replace (s)
+  (day12/first-? s))
+
 (defun days12/get-alternatives (data)
   (cl-assert (not (day12/is-complete? data)))
   (let ((s (plist-get data :s))
         (digits (plist-get data :digits))
         (regex (plist-get data :regex)))
-    (let ((first-? (s-index-of "?" s)))
-      (cl-assert first-?)      
+    (let ((selected-? (day12/select-next-?-to-replace s)))
+      (cl-assert selected-?)      
       (-filter #'day12/is-compatible?
                (--map (list :s it
                             :digits digits
                             :regex regex)
-                      (list (day12/replace-at s first-? "#")
-                            (day12/replace-at s first-? ".")))))))
+                      (list (day12/replace-at s selected-? "#")
+                            (day12/replace-at s selected-? ".")))))))
 
 (defun day12/find-combinations (data)
   (if (day12/is-complete? data)
