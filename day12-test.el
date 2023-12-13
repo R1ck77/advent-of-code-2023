@@ -27,7 +27,7 @@
     (it "solves the problem"
       (expect (day12/part-1 (advent/read-problem-lines 12 :problem))
               :to-be 7670)))
-  (xdescribe "part 2"
+  (describe "part 2"
     (it "computes the right arrangements for '???.### 1,1,3'"
       (expect (day12/dividi-et-imperat (day12/unfold (day12/read-line "???.### 1,1,3")))
               :to-be 1))

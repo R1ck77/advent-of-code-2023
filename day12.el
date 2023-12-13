@@ -84,7 +84,7 @@
 
 (defun day12/find-combinations (data)
   (if (day12/is-complete? data)
-      (list data)
+      (-filter #'day12/is-compatible? (list data))
     (let ((new-combinations (day12/get-alternatives data)))
       (apply #'append (-map #'day12/find-combinations new-combinations)))))
 
@@ -139,19 +139,23 @@ nil is returned if splitting is impossible"
       (let ((results (--filter (not (zerop it))
                                (-map #'day12/evaluate-pair
                                      (--map (day12/build-subdata part1-part2 it) digit-combinations)))))
-        (if results
-            (car results)
-          0)))))
+        (apply #'+ results)))))
 
 
 (defun day12/dividi-et-imperat (data)
-  (if (day12/is-complete? data)
-      (if (day12/is-compatible? data) 1 0)
-    (let ((s (plist-get data :s))
-          (digits (plist-get data :digits)))
-      (if (day12/can-be-divided? s)
-          (day12/compute-subproblems data)
-        (apply #'+ (-map #'day12/dividi-et-imperat (day12/get-alternatives data)))))))
+  (let ((result 
+         (if (day12/is-complete? data)
+             (if (day12/is-compatible? data) 1 0)
+           (let ((s (plist-get data :s))
+                 (digits (plist-get data :digits)))
+             (if (day12/can-be-divided? s)
+                 (day12/compute-subproblems data)
+               (apply #'+ (-map #'day12/dividi-et-imperat (day12/get-alternatives data))))))))
+    (when-let ((other-result (day12/count-combinations data))
+               (check (/= other-result result)))
+      (message "%S -> %s vs %s " data result other-result)
+      (error "Invaid result"))
+    result))
 
 (defun day12/sum-all-combinations (data)
   (let ((sum 0))
