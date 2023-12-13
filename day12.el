@@ -68,7 +68,7 @@
 (defun day12/select-next-?-to-replace (s)
   (day12/first-? s))
 
-(defun days12/get-alternatives (data)
+(defun day12/get-alternatives (data)
   (cl-assert (not (day12/is-complete? data)))
   (let ((s (plist-get data :s))
         (digits (plist-get data :digits))
@@ -85,18 +85,34 @@
 (defun day12/find-combinations (data)
   (if (day12/is-complete? data)
       (list data)
-    (let ((new-combinations (days12/get-alternatives data)))
+    (let ((new-combinations (day12/get-alternatives data)))
       (apply #'append (-map #'day12/find-combinations new-combinations)))))
 
 (defun day12/count-combinations (data)
   (length (day12/find-combinations data)))
 
+(defun day12/can-be-divided? (s)
+  (--any? (s-match "^[#]+$" it) (s-split "[.]" s t)))
+
+
+(defun day12/dividi-et-imperat (data)
+  (if (day12/is-complete? data)
+      (if (day12/is-compatible? data) 1 0)
+   (let ((s (plist-get data :s))
+         (digits (plist-get data :)))
+     (if (and nil (day12/can-be-divided? s))
+                                        ;(apply #'* ((day12/get-list-of-subblocks )))
+         12
+       (apply #'+ (-map #'day12/dividi-et-imperat (day12/get-alternatives data)))))))
+
 (defun day12/sum-all-combinations (data)
   (let ((sum 0))
     (--each data
       (message "Processing %s %s" (plist-get it :s) (plist-get it :digits))
-      (setq sum (+ sum (length (day12/find-combinations it)))))
+      (setq sum (+ sum (day12/dividi-et-imperat it))))
     sum))
+
+
 
 (defun day12/part-1 (lines)
   (day12/sum-all-combinations
