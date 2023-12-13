@@ -61,7 +61,7 @@
   (let ((q-marks (--find-indices (string= "?" it) (s-split "" s t))) )
     (elt q-marks (random (length q-marks)))))
 
-(defun day12/half? (s)
+(defun day12/half-? (s)
   (let ((q-marks (--find-indices (string= "?" it) (s-split "" s t))) )
     (elt q-marks (/ (length q-marks) 2)))
   )
@@ -70,7 +70,7 @@
   (s-index-of "?" s))
 
 (defun day12/select-next-?-to-replace (s)
-  (day12/half? s))
+  (day12/first-? s))
 
 (defun day12/get-alternatives (data)
   (cl-assert (not (day12/is-complete? data)))
@@ -142,8 +142,13 @@ nil is returned if splitting is impossible"
         (apply #'+ results)))))
 
 (defun day12/is-obviously-incompatible? (data)
-  (< (s-count-matches "[#?]" (plist-get data :s))
-     (apply #'+ (plist-get data :digits))))
+  (let* ((s (plist-get data :s))
+         (digits (plist-get data :digits)))
+    (unless (< (length (s-split "[.]" s t)) (length digits))
+      (let ((no-spaces (s-replace "." "" s))
+             (total (apply #'+ digits)))
+        (or (< (length no-spaces) total)
+            (> (length (s-replace "?" "" no-spaces)) total))))))
 
 (defun day12/dividi-et-imperat (data)
   (let ((result (if (day12/is-obviously-incompatible? data)
@@ -170,14 +175,18 @@ nil is returned if splitting is impossible"
        (<= x b)))
 
 (defun day12/count-combinations-recursively (data)
-  (if-let ((big (day12/in-range (length (plist-get data :s)) 5 10))
-           (result (advent/get db data)))
-      (progn
-;        (message "*")
-        result)
-    (let ((computed (day12/dividi-et-imperat data)))
-      (advent/put db data computed)
-      computed)))
+  ;;; UNUSED
+  (comment
+   (if-let ((big (day12/in-range (length (plist-get data :s)) 5 10))
+            (result (advent/get db data)))
+       (progn
+                                        ;        (message "*")
+         result)
+     (let ((computed (day12/dividi-et-imperat data)))
+       (advent/put db data computed)
+       computed)))
+  ;;; USED
+  (day12/dividi-et-imperat data))
 
 (defun day12/sum-all-combinations (data)
   (let ((sum 0))
