@@ -93,7 +93,7 @@
 (defun day12/count-combinations (data)
   (length (day12/find-combinations data)))
 
-(defun day12/can-be-divided? (s)
+(defun day12/can-be-divided? (s)  
   (--any? (s-match "^[#]+$" it) (s-split "[.]" s t)))
 
 (defun day12/split-digits (index digits)
@@ -122,11 +122,18 @@ nil is returned if splitting is impossible"
         (list :s (cadr s1-s2)
               :digits (cadr d1-d2))))
 
+(defun day12/sort (data1-data2)
+  (if (< (apply #'+ (plist-get (car data1-data2) :digits))
+         (apply #'+ (plist-get (cadr data1-data2) :digits)))
+      data1-data2
+    (reverse data1-data2)))
+
 (defun day12/evaluate-pair (data1-data2)
-  (let ((result1 (day12/count-combinations-recursively (car data1-data2))))
-    (if (zerop result1)
-        0
-      (* result1 (day12/count-combinations-recursively (cadr data1-data2))))))
+  (let ((data1-data2 (day12/sort data1-data2)))
+   (let ((result1 (day12/count-combinations-recursively (car data1-data2))))
+     (if (zerop result1)
+         0
+       (* result1 (day12/count-combinations-recursively (cadr data1-data2)))))))
 
 (defun day12/compute-subproblems (data)
   (let* ((digit-part1-part2 (day12/split-s (plist-get data :s)))
@@ -151,21 +158,24 @@ nil is returned if splitting is impossible"
             (> (length (s-replace "?" "" no-spaces)) total))))))
 
 (defun day12/dividi-et-imperat (data)
-  (let ((result (if (day12/is-obviously-incompatible? data)
-                    0
-                  (if (day12/is-complete? data)
-                      (if (day12/is-compatible? data) 1 0)
-                    (let ((s (plist-get data :s))
-                          (digits (plist-get data :digits)))
-                      (if (day12/can-be-divided? s)
-                          (day12/compute-subproblems data)
-                        (apply #'+ (-map #'day12/count-combinations-recursively (day12/get-alternatives data)))))))))
-    result))
+  (if (day12/is-obviously-incompatible? data)
+      0
+    (if (day12/is-complete? data)
+        (if (day12/is-compatible? data) 1 0)
+      (if (< (length (plist-get data :s)) 10)
+          (day12/count-combinations data)
+        (let ((s (plist-get data :s))
+              (digits (plist-get data :digits)))
+          (if (day12/can-be-divided? s)
+              (day12/compute-subproblems data)
+            (apply #'+ (-map #'day12/count-combinations-recursively (day12/get-alternatives data)))))))))
 
 ;;; TODO/FIXME remove: the caching doesn't give anything
 (setq db (advent/table))
 (setq max-lisp-eval-depth 100000)
-(setq do-cache nil)
+(setq do-cache t)
+(setq from-range 11)
+(setq to-range 20)
 
 (defun day12/in-range (x a b)
   (and (>= x a)
@@ -173,7 +183,7 @@ nil is returned if splitting is impossible"
 
 (defun day12/count-combinations-recursively (data)
   (if do-cache
-      (if-let ((big (day12/in-range (length (plist-get data :s)) 0 100))
+      (if-let ((big (day12/in-range (length (plist-get data :s)) from-range to-range))
                (result (advent/get db data)))
           (progn
             ;; (message "*")
