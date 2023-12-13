@@ -15,8 +15,7 @@
   (let* ((tokens (s-split " " line))
          (digits (day12/read-digits (cadr tokens))))
     (list :s (car tokens)
-          :digits digits
-          :regex (day12/create-regex digits))))
+          :digits digits)))
 
 (defun day12/read-data (lines)
   (-map #'day12/read-line lines))
@@ -47,7 +46,7 @@
             (s-split "[.]+" solved-part t))))
 
 (defun day12/is-compatible? (data)
-  (s-match (plist-get data :regex)
+  (s-match (day12/create-regex (plist-get data :digits))
            (plist-get data :s)))
 
 (defun day12/experiment (s)
@@ -62,23 +61,26 @@
   (let ((q-marks (--find-indices (string= "?" it) (s-split "" s t))) )
     (elt q-marks (random (length q-marks)))))
 
+(defun day12/half? (s)
+  (let ((q-marks (--find-indices (string= "?" it) (s-split "" s t))) )
+    (elt q-marks (/ (length q-marks) 2)))
+  )
+
 (defun day12/first-? (s)
   (s-index-of "?" s))
 
 (defun day12/select-next-?-to-replace (s)
-  (day12/first-? s))
+  (day12/half? s))
 
 (defun day12/get-alternatives (data)
   (cl-assert (not (day12/is-complete? data)))
   (let ((s (plist-get data :s))
-        (digits (plist-get data :digits))
-        (regex (plist-get data :regex)))
+        (digits (plist-get data :digits)))
     (let ((selected-? (day12/select-next-?-to-replace s)))
       (cl-assert selected-?)      
       (-filter #'day12/is-compatible?
                (--map (list :s it
-                            :digits digits
-                            :regex regex)
+                            :digits digits)
                       (list (day12/replace-at s selected-? "#")
                             (day12/replace-at s selected-? ".")))))))
 
@@ -116,17 +118,15 @@ nil is returned if splitting is impossible"
 
 (defun day12/build-subdata (s1-s2 d1-d2)
   (list (list :s (car s1-s2)
-              :digits (car d1-d2)
-              :regex (day12/create-regex (car d1-d2)))
+              :digits (car d1-d2))
         (list :s (cadr s1-s2)
-              :digits (cadr d1-d2)
-              :regex (day12/create-regex (cadr d1-d2)))))
+              :digits (cadr d1-d2))))
 
 (defun day12/evaluate-pair (data1-data2)
-  (let ((result1 (day12/dividi-et-imperat (car data1-data2))))
+  (let ((result1 (day12/count-combinations-recursively (car data1-data2))))
     (if (zerop result1)
         0
-      (* result1 (day12/dividi-et-imperat (cadr data1-data2))))))
+      (* result1 (day12/count-combinations-recursively (cadr data1-data2))))))
 
 (defun day12/compute-subproblems (data)
   (let* ((digit-part1-part2 (day12/split-s (plist-get data :s)))
@@ -141,27 +141,47 @@ nil is returned if splitting is impossible"
                                      (--map (day12/build-subdata part1-part2 it) digit-combinations)))))
         (apply #'+ results)))))
 
+(defun day12/is-obviously-incompatible? (data)
+  (< (s-count-matches "[#?]" (plist-get data :s))
+     (apply #'+ (plist-get data :digits))))
 
 (defun day12/dividi-et-imperat (data)
-  (let ((result 
-         (if (day12/is-complete? data)
-             (if (day12/is-compatible? data) 1 0)
-           (let ((s (plist-get data :s))
-                 (digits (plist-get data :digits)))
-             (if (day12/can-be-divided? s)
-                 (day12/compute-subproblems data)
-               (apply #'+ (-map #'day12/dividi-et-imperat (day12/get-alternatives data))))))))
+  (let ((result (if (day12/is-obviously-incompatible? data)
+                    0
+                  (if (day12/is-complete? data)
+                      (if (day12/is-compatible? data) 1 0)
+                    (let ((s (plist-get data :s))
+                          (digits (plist-get data :digits)))
+                      (if (day12/can-be-divided? s)
+                          (day12/compute-subproblems data)
+                        (apply #'+ (-map #'day12/count-combinations-recursively (day12/get-alternatives data)))))))))
     (when-let ((other-result (day12/count-combinations data))
                (check (/= other-result result)))
       (message "%S -> %s vs %s " data result other-result)
       (error "Invaid result"))
     result))
 
+;;; TODO/FIXME remove: the caching doesn't give anything
+(setq db (advent/table))
+(setq max-lisp-eval-depth 100000)
+
+(defun day12/count-combinations-recursively (data)
+  (comment
+   (if-let ((big (> (length (plist-get data :s)) 1000))
+          (result (advent/get db data)))
+     (progn
+       (message "*")
+       result)
+   (let ((computed (day12/dividi-et-imperat data)))
+     (advent/put db data computed)
+     computed)))
+  (day12/dividi-et-imperat data))
+
 (defun day12/sum-all-combinations (data)
   (let ((sum 0))
     (--each data
       (message "Processing %s %s" (plist-get it :s) (plist-get it :digits))
-      (setq sum (+ sum (day12/dividi-et-imperat it))))
+      (setq sum (+ sum (day12/count-combinations-recursively it))))
     sum))
 
 
@@ -173,8 +193,7 @@ nil is returned if splitting is impossible"
 (defun day12/unfold (data)
   (let ((digits (apply #'append (-repeat 5 (plist-get data :digits)))))
     (list :s (apply #'concat (-interpose "?" (-repeat 5 (plist-get data :s))))
-          :digits digits
-          :regex (day12/create-regex digits))))
+          :digits digits)))
 
 (defun day12/part-2 (lines)
   (day12/sum-all-combinations
