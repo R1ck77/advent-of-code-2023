@@ -94,16 +94,64 @@
 (defun day12/can-be-divided? (s)
   (--any? (s-match "^[#]+$" it) (s-split "[.]" s t)))
 
+(defun day12/split-digits (index digits)
+  (list (-take index digits)
+        (-drop (1+ index) digits)))
+
+(defun day12/find-digit-combinations (value digits)
+  "Returns a list of couples of split digits.
+
+nil is returned if splitting is impossible"
+  (if-let ((indices (-elem-indices value digits )))
+      (--map (day12/split-digits it digits) indices)))
+
+(defun day12/split-s (s)
+  (let* ((tokens (s-split "[.]" s t))
+         (first-index (--find-index (s-match "^[#]+$" it) tokens))
+         (first-string (apply #'concat (-interpose "." (-take first-index tokens))))
+         (second-string (apply #'concat (-interpose "." (-drop (1+ first-index) tokens )))))
+    (list (length (elt tokens first-index))
+          first-string
+          second-string)))
+
+(defun day12/build-subdata (s1-s2 d1-d2)
+  (list (list :s (car s1-s2)
+              :digits (car d1-d2)
+              :regex (day12/create-regex (car d1-d2)))
+        (list :s (cadr s1-s2)
+              :digits (cadr d1-d2)
+              :regex (day12/create-regex (cadr d1-d2)))))
+
+(defun day12/evaluate-pair (data1-data2)
+  (let ((result1 (day12/dividi-et-imperat (car data1-data2))))
+    (if (zerop result1)
+        0
+      (* result1 (day12/dividi-et-imperat (cadr data1-data2))))))
+
+(defun day12/compute-subproblems (data)
+  (let* ((digit-part1-part2 (day12/split-s (plist-get data :s)))
+         (part1-part2 (rest digit-part1-part2))
+         (digit-combinations (day12/find-digit-combinations (car digit-part1-part2) (plist-get data :digits))))
+    (if (not digit-combinations)
+        ;; no splitting yields a valid result
+        0
+      ;; try to evaluate the sub-combinations
+      (let ((results (--filter (not (zerop it))
+                               (-map #'day12/evaluate-pair
+                                     (--map (day12/build-subdata part1-part2 it) digit-combinations)))))
+        (if results
+            (car results)
+          0)))))
+
 
 (defun day12/dividi-et-imperat (data)
   (if (day12/is-complete? data)
       (if (day12/is-compatible? data) 1 0)
-   (let ((s (plist-get data :s))
-         (digits (plist-get data :)))
-     (if (and nil (day12/can-be-divided? s))
-                                        ;(apply #'* ((day12/get-list-of-subblocks )))
-         12
-       (apply #'+ (-map #'day12/dividi-et-imperat (day12/get-alternatives data)))))))
+    (let ((s (plist-get data :s))
+          (digits (plist-get data :digits)))
+      (if (day12/can-be-divided? s)
+          (day12/compute-subproblems data)
+        (apply #'+ (-map #'day12/dividi-et-imperat (day12/get-alternatives data)))))))
 
 (defun day12/sum-all-combinations (data)
   (let ((sum 0))
@@ -120,13 +168,13 @@
 
 (defun day12/unfold (data)
   (let ((digits (apply #'append (-repeat 5 (plist-get data :digits)))))
-   (list :s (apply #'concat (-interpose "?" (-repeat 5 (plist-get data :s))))
-         :digits digits
-         :regex (day12/create-regex digits))))
+    (list :s (apply #'concat (-interpose "?" (-repeat 5 (plist-get data :s))))
+          :digits digits
+          :regex (day12/create-regex digits))))
 
 (defun day12/part-2 (lines)
   (day12/sum-all-combinations
    (-map #'day12/unfold
-    (day12/read-data lines))))
+         (day12/read-data lines))))
 
 (provide 'day12)
