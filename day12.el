@@ -70,7 +70,7 @@
   (s-index-of "?" s))
 
 (defun day12/select-next-?-to-replace (s)
-  (day12/first-? s))
+  (day12/half-? s))
 
 (defun day12/get-alternatives (data)
   (cl-assert (not (day12/is-complete? data)))
@@ -169,24 +169,23 @@ nil is returned if splitting is impossible"
 ;;; TODO/FIXME remove: the caching doesn't give anything
 (setq db (advent/table))
 (setq max-lisp-eval-depth 100000)
+(setq do-cache nil)
 
 (defun day12/in-range (x a b)
   (and (>= x a)
        (<= x b)))
 
 (defun day12/count-combinations-recursively (data)
-  ;;; UNUSED
-  (comment
-   (if-let ((big (day12/in-range (length (plist-get data :s)) 5 10))
-            (result (advent/get db data)))
-       (progn
-                                        ;        (message "*")
-         result)
-     (let ((computed (day12/dividi-et-imperat data)))
-       (advent/put db data computed)
-       computed)))
-  ;;; USED
-  (day12/dividi-et-imperat data))
+  (if do-cache
+      (if-let ((big (day12/in-range (length (plist-get data :s)) 0 100))
+               (result (advent/get db data)))
+          (progn
+            ;; (message "*")
+            result)
+        (let ((computed (day12/dividi-et-imperat data)))
+          (advent/put db data computed)
+          computed))
+    (day12/dividi-et-imperat data)))
 
 (defun day12/sum-all-combinations (data)
   (let ((sum 0))
