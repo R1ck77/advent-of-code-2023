@@ -165,17 +165,19 @@ nil is returned if splitting is impossible"
 (setq db (advent/table))
 (setq max-lisp-eval-depth 100000)
 
+(defun day12/in-range (x a b)
+  (and (>= x a)
+       (<= x b)))
+
 (defun day12/count-combinations-recursively (data)
-  (comment
-   (if-let ((big (> (length (plist-get data :s)) 1000))
-          (result (advent/get db data)))
-     (progn
-       (message "*")
-       result)
-   (let ((computed (day12/dividi-et-imperat data)))
-     (advent/put db data computed)
-     computed)))
-  (day12/dividi-et-imperat data))
+  (if-let ((big (day12/in-range (length (plist-get data :s)) 5 10))
+           (result (advent/get db data)))
+      (progn
+;        (message "*")
+        result)
+    (let ((computed (day12/dividi-et-imperat data)))
+      (advent/put db data computed)
+      computed)))
 
 (defun day12/sum-all-combinations (data)
   (let ((sum 0))
