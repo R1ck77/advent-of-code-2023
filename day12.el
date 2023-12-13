@@ -160,10 +160,6 @@ nil is returned if splitting is impossible"
                       (if (day12/can-be-divided? s)
                           (day12/compute-subproblems data)
                         (apply #'+ (-map #'day12/count-combinations-recursively (day12/get-alternatives data)))))))))
-    (when-let ((other-result (day12/count-combinations data))
-               (check (/= other-result result)))
-      (message "%S -> %s vs %s " data result other-result)
-      (error "Invaid result"))
     result))
 
 ;;; TODO/FIXME remove: the caching doesn't give anything
