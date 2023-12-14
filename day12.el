@@ -69,8 +69,13 @@
 (defun day12/first-? (s)
   (s-index-of "?" s))
 
+(defun day12/break-largest-? (s)
+  (let* ((block-size (apply #'max (-map #'length (s-split "[.#]" s t))))
+         (largest-block (s-repeat block-size "?")))
+    (+ (s-index-of largest-block s) (/ block-size 2))))
+
 (defun day12/select-next-?-to-replace (s)
-  (day12/half-? s))
+  (day12/break-largest-? s))
 
 (defun day12/get-alternatives (data)
   (cl-assert (not (day12/is-complete? data)))
@@ -162,7 +167,7 @@ nil is returned if splitting is impossible"
       0
     (if (day12/is-complete? data)
         (if (day12/is-compatible? data) 1 0)
-      (if (< (length (plist-get data :s)) 10)
+      (if (< (length (plist-get data :s)) regexp-processing-range)
           (day12/count-combinations data)
         (let ((s (plist-get data :s))
               (digits (plist-get data :digits)))
@@ -172,10 +177,11 @@ nil is returned if splitting is impossible"
 
 ;;; TODO/FIXME remove: the caching doesn't give anything
 (setq db (advent/table))
-(setq max-lisp-eval-depth 100000)
+(setq max-lisp-eval-depth 10000)
 (setq do-cache t)
-(setq from-range 11)
-(setq to-range 20)
+(setq from-range 10)
+(setq to-range 200)
+(setq regexp-processing-range 5)
 
 (defun day12/in-range (x a b)
   (and (>= x a)
@@ -199,8 +205,6 @@ nil is returned if splitting is impossible"
       (message "Processing %s %s" (plist-get it :s) (plist-get it :digits))
       (setq sum (+ sum (day12/count-combinations-recursively it))))
     sum))
-
-
 
 (defun day12/part-1 (lines)
   (day12/sum-all-combinations

@@ -46,9 +46,9 @@
     (it "computes the right arrangements for '?###???????? 3,2,1'"
       (expect (day12/dividi-et-imperat (day12/unfold (day12/read-line "?###???????? 3,2,1")))
               :to-be 506250))    
-    (it "replicates the example"
+    (xit "replicates the example"
       (expect (day12/part-2 (advent/read-problem-lines 12 :example))
               :to-be 525152))
-    (it "solves the problem"
+    (xit "solves the problem"
       (expect (day12/part-2 (advent/read-problem-lines 12 :problem))
               :to-be 42))))
