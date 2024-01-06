@@ -84,10 +84,11 @@
     (let ((selected-? (day12/select-next-?-to-replace s)))
       (cl-assert selected-?)      
       (-filter #'day12/is-compatible?
-               (--map (list :s it
-                            :digits digits)
-                      (list (day12/replace-at s selected-? "#")
-                            (day12/replace-at s selected-? ".")))))))
+               (-map #'day12/cache-missing-dots
+                     (--map (list :s it
+                                  :digits digits)
+                            (list (day12/replace-at s selected-? "#")
+                                  (day12/replace-at s selected-? "."))))))))
 
 (defun day12/find-combinations (data)
   (if (day12/is-complete? data)
@@ -122,10 +123,10 @@ nil is returned if splitting is impossible"
           second-string)))
 
 (defun day12/build-subdata (s1-s2 d1-d2)
-  (list (list :s (car s1-s2)
-              :digits (car d1-d2))
-        (list :s (cadr s1-s2)
-              :digits (cadr d1-d2))))
+  (list (day12/cache-missing-dots (list :s (car s1-s2)
+                                        :digits (car d1-d2)))
+        (day12/cache-missing-dots (list :s (cadr s1-s2)
+                                        :digits (cadr d1-d2)))))
 
 (defun day12/sort (data1-data2)
   (if (< (apply #'+ (plist-get (car data1-data2) :digits))
