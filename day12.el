@@ -206,9 +206,22 @@ nil is returned if splitting is impossible"
       (setq sum (+ sum (day12/count-combinations-recursively it))))
     sum))
 
+(defun day12/count-missing-dashes (data)
+  (-  (apply #'+ (plist-get data :digits))
+      (s-count-matches "[#]" (plist-get data :s))))
+
+(defun day12/count-missing-dots (data)
+  (- (s-count-matches "[?]" (plist-get data :s))
+     (day12/count-missing-dashes data)))
+
+(defun day12/cache-missing-dots (data)
+  (append data (list :dots (day12/count-missing-dots data))))
+
+
 (defun day12/part-1 (lines)
   (day12/sum-all-combinations
-   (day12/read-data lines)))
+   (-map #'day12/cache-missing-dots
+         (day12/read-data lines))))
 
 (defun day12/unfold (data)
   (let ((digits (apply #'append (-repeat 5 (plist-get data :digits)))))
@@ -217,7 +230,9 @@ nil is returned if splitting is impossible"
 
 (defun day12/part-2 (lines)
   (day12/sum-all-combinations
-   (-map #'day12/unfold
-         (day12/read-data lines))))
+   (-map #'day12/cache-missing-dots
+         (-map #'day12/unfold
+          (day12/read-data lines)))))
+
 
 (provide 'day12)
