@@ -2,7 +2,7 @@
 (require 'buttercup)
 
 (describe "--- Day 12: Hot Springs ---"
-  (xdescribe "part 1"
+  (describe "part 1"
     (it "computes the right arrangements for '???.### 1,1,3'"
       (expect (day12/dividi-et-imperat (day12/read-line "???.### 1,1,3"))
               :to-be 1))

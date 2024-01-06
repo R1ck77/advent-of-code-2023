@@ -202,7 +202,7 @@ nil is returned if splitting is impossible"
 (defun day12/sum-all-combinations (data)
   (let ((sum 0))
     (--each data
-      (message "Processing %s %s" (plist-get it :s) (plist-get it :digits))
+;      (message "Processing %s %s" (plist-get it :s) (plist-get it :digits))
       (setq sum (+ sum (day12/count-combinations-recursively it))))
     sum))
 
