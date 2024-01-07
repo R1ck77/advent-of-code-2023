@@ -131,11 +131,17 @@ elements are only guaranteed to be valid split, but are not checked against digi
   (let ((digits (plist-get data :digits)))
     (/ (length digits) 2)))
 
-(defun day12/-combine-intervals (pair)
+(defun day12/-sorted-combine-intervals (pair)
   (let ((first-value (day12/-count-combinations (car pair))))
     (if (zerop first-value)
         0
       (* first-value (day12/-count-combinations (cadr pair))))))
+
+(defun day12/-combine-intervals (pair)
+  (if (< (s-count-matches "[?]" (or (plist-get (car pair) :s) ""))
+         (s-count-matches "[?]" (or (plist-get (cadr pair) :s) "")))
+      (day12/-sorted-combine-intervals pair)
+    (day12/-sorted-combine-intervals (reverse pair))))
 
 (defun day12/-checked-count-combinations (data)
   (let ((digits (plist-get data :digits))
