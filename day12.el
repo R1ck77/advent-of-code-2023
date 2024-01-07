@@ -128,13 +128,12 @@ elements are only guaranteed to be valid split, but are not checked against digi
                      (day12/-incoherent? (cadr it))))
             (day12/-find-subdata data index)))
 
-(defun day12/-get-next-index (data)
-  (let* ((digits (plist-get data :digits))
-         (max (apply #'max digits)))
-    (let ((max-indices (-map #'car
-                             (--filter (= max (cdr it))
-                                       (--map-indexed (cons it-index it) digits)))))
-      (elt max-indices (/ (length max-indices) 2)))))
+(defun day12/-get-next-index (digits)
+  (let* ((max (apply #'max digits))
+         (max-indices (-map #'car
+                           (--filter (= max (cdr it))
+                                     (--map-indexed (cons it-index it) digits)))))
+    (elt max-indices (/ (length max-indices) 2))))
 
 (defun day12/-sorted-combine-intervals (pair cache)
   (let ((first-value (day12/-count-combinations (car pair) cache)))
@@ -151,7 +150,7 @@ elements are only guaranteed to be valid split, but are not checked against digi
 (defun day12/-checked-count-combinations (data cache)
   (let ((digits (plist-get data :digits))
         (s (plist-get data :s)))
-    (let* ((next-digits-index (day12/-get-next-index data))
+    (let* ((next-digits-index (day12/-get-next-index digits))
            (subpairs (day12/-find-coherent-subdata data next-digits-index)))
       (apply #'+  (--map (day12/-combine-intervals it cache)
                          subpairs)))))
@@ -175,7 +174,6 @@ elements are only guaranteed to be valid split, but are not checked against digi
     (day12/-do-with-cache #'day12/-uncached-count-combinations data cache)))
 
 (defun day12/count-combinations (data)
-  ;; Wrap the combination in a nice "." boundary to simplify everything
   (day12/-count-combinations (list :s (concat "." (plist-get data :s) ".")
                                    :digits (plist-get data :digits))))
 
@@ -184,12 +182,9 @@ elements are only guaranteed to be valid split, but are not checked against digi
          (-map #'day12/count-combinations
                data-list)))
 
-
 (defun day12/part-1 (lines)
   (day12/resolve-problem
    (day12/read-data lines)))
-
-
 
 (defun day12/unfold (data)
   (let ((digits (apply #'append (-repeat 5 (plist-get data :digits)))))
@@ -203,8 +198,6 @@ elements are only guaranteed to be valid split, but are not checked against digi
 
 (setq example (day12/read-data (advent/read-problem-lines 12 :example)))
 (setq problem (day12/read-data (advent/read-problem-lines 12 :problem)))
-
-
 
 (provide 'day12)
 
