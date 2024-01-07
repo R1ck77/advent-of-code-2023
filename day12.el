@@ -114,13 +114,18 @@ elements are only guaranteed to be valid split, but are not checked against digi
   (let ((digits (plist-get data :digits)))
     (/ (length digits) 2)))
 
+(defun day12/-combine-intervals (pair)
+  (let ((first-value (day12/-count-combinations (car pair))))
+    (if (zerop first-value)
+        0
+      (* first-value (day12/-count-combinations (cadr pair))))))
+
 (defun day12/-checked-count-combinations (data)
   (let ((digits (plist-get data :digits))
         (s (plist-get data :s)))
     (let* ((next-digits-index (day12/-get-next-index data))
            (subpairs (day12/-find-coherent-subdata data next-digits-index)))
-      (apply #'+  (--map (* (day12/-count-combinations (car it))
-                            (day12/-count-combinations (cadr it)))
+      (apply #'+  (-map #'day12/-combine-intervals
                          subpairs)))))
 
 (defun day12/-count-combinations (data)
