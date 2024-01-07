@@ -128,8 +128,12 @@ elements are only guaranteed to be valid split, but are not checked against digi
             (day12/-find-subdata data index)))
 
 (defun day12/-get-next-index (data)
-  (let ((digits (plist-get data :digits)))
-    (/ (length digits) 2)))
+  (let* ((digits (plist-get data :digits))
+         (max (apply #'max digits)))
+    (let ((max-indices (-map #'car
+                             (--filter (= max (cdr it))
+                                       (--map-indexed (cons it-index it) digits)))))
+      (elt max-indices (/ (length max-indices) 2)))))
 
 (defun day12/-sorted-combine-intervals (pair)
   (let ((first-value (day12/-count-combinations (car pair))))
@@ -167,7 +171,7 @@ elements are only guaranteed to be valid split, but are not checked against digi
   (apply #'+
          (-map #'day12/count-combinations
                (--map (progn
-;                        (message "Processing %s" it)
+                        (message "Processing %s" it)
                         it)
                       data-list))))
 
