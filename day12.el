@@ -20,9 +20,6 @@
 (defun day12/read-data (lines)
   (-map #'day12/read-line lines))
 
-(setq example (day12/read-data (advent/read-problem-lines 12 :example)))
-(setq problem (day12/read-data (advent/read-problem-lines 12 :problem)))
-
 (defun day12/is-complete? (data)
   (not (s-contains? "?" (plist-get data :s))))
 
@@ -219,21 +216,78 @@ nil is returned if splitting is impossible"
   (append data (list :dots (day12/count-missing-dots data))))
 
 
-(defun day12/part-1 (lines)
-  (day12/sum-all-combinations
-   (-map #'day12/cache-missing-dots
-         (day12/read-data lines))))
-
 (defun day12/unfold (data)
   (let ((digits (apply #'append (-repeat 5 (plist-get data :digits)))))
     (list :s (apply #'concat (-interpose "?" (-repeat 5 (plist-get data :s))))
           :digits digits)))
 
+(defun day12/?-indices (s)
+  (-map #'car
+        (--filter (= (cdr it) ??)
+             (--map-indexed (cons it-index it)
+                            (-map #'identity s)))))
+
+(defun day12/add-dot-to-data (data index)
+  (list :s (day12/replace-at (plist-get data :s) index ".")
+        :dots (1- (plist-get data :dots))
+        :digits (plist-get data :digits)))
+
+(defun day12/generate-combinations (data)
+  (--map (day12/add-dot-to-data data it)
+         (day12/?-indices (plist-get data :s))))
+
+(defun day12/resolve-incognita (data)
+  "If there are 0 available dots, replace all ? with #"
+  (let ((missing-dots (plist-get data :dots)))
+    (if (zerop missing-dots)
+        (list :s (s-replace "?" "#" (plist-get data :s))
+              :digits (plist-get data :digits)
+              :dots 0)
+      data)))
+
+(defun day12/get-solution-score (data)
+  (cl-assert (zerop (plist-get data :dots)))
+  (let ((s (plist-get data :s))
+        (digits (plist-get data :digits)))
+    (if (equal (-map #'length (s-split "[.]+" s t))
+               digits)
+        1
+      0)))
+
+(defun day12/new-count-combinations (unchecked-data &optional cache)
+  (let ((data (day12/resolve-incognita unchecked-data))
+        (cache (or cache (advent/table))))
+    (if (advent/get cache (plist-get data :s)) 0
+      (advent/put cache (plist-get data :s) t)
+      (if (zerop (plist-get data :dots))
+          (day12/get-solution-score data)
+        (apply #'+ (--map (day12/new-count-combinations it cache)
+                          (day12/generate-combinations data)))))))
+
+(defun day12/new-resolve-problem (data-list)
+    (apply #'+
+         (-map #'day12/new-count-combinations
+               (--map (progn
+                        (message "Processing %s" it)
+                        it)
+                data-list))))
+
+(defun day12/part-1 (lines)
+  (day12/new-resolve-problem
+   (-map #'day12/cache-missing-dots
+         (day12/read-data lines))))
+
+
 (defun day12/part-2 (lines)
-  (day12/sum-all-combinations
+  (day12/new-resolve-problem
    (-map #'day12/cache-missing-dots
          (-map #'day12/unfold
-          (day12/read-data lines)))))
+               (day12/read-data lines)))))
+
+(setq example (-map #'day12/cache-missing-dots (day12/read-data (advent/read-problem-lines 12 :example))))
+(setq problem (-map #'day12/cache-missing-dots (day12/read-data (advent/read-problem-lines 12 :problem))))
+
 
 
 (provide 'day12)
+
