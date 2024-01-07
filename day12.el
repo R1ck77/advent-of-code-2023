@@ -98,12 +98,19 @@ elements are only guaranteed to be valid split, but are not checked against digi
       (--map (day12/-create-sub-solution pre+post-digits it)
              (day12/-all-split-combinations s n)))))
 
+(defun day12/-string-too-short? (data)
+  (let ((s (plist-get data :s))
+        (digits (plist-get data :digits)))
+    (< (length s)
+       (+ (apply #'+ digits) (1- (length digits))))))
+
 (defun day12/-incoherent? (data)
   "Returns truthy if the data is obviously invalid"
   (let ((s (plist-get data :s))
         (digits (plist-get data :digits)))
     (or (and (not s) digits)
-        (and (not digits) (and s (s-matches? "[#]" s))))))
+        (and (not digits) (and s (s-matches? "[#]" s)))
+        (day12/-string-too-short? data))))
 
 (defun day12/-find-coherent-subdata (data index)
   (--filter (not (or (day12/-incoherent? (car it))
