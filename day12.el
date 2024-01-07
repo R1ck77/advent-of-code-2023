@@ -99,10 +99,18 @@ elements are only guaranteed to be valid split, but are not checked against digi
              (day12/-all-split-combinations s n)))))
 
 (defun day12/-string-too-short? (data)
-  (let ((s (plist-get data :s))
+  (let* ((s (or (plist-get data :s) ""))
+         (digits (plist-get data :digits))
+         (digits-sum (apply #'+ digits)))
+    (or (< (length s)
+           (+ digits-sum (1- (length digits))))
+        (< (s-count-matches "[#?]" s)
+           digits-sum))))
+
+(defun day12/-digits-too-short? (data)
+  (let ((s (or (plist-get data :s) ""))
         (digits (plist-get data :digits)))
-    (< (length s)
-       (+ (apply #'+ digits) (1- (length digits))))))
+    (> (s-count-matches "[#]" s) (apply #'+ digits))))
 
 (defun day12/-incoherent? (data)
   "Returns truthy if the data is obviously invalid"
@@ -110,6 +118,8 @@ elements are only guaranteed to be valid split, but are not checked against digi
         (digits (plist-get data :digits)))
     (or (and (not s) digits)
         (and (not digits) (and s (s-matches? "[#]" s)))
+        ;; The next checks are very slow for the small examples, but work for the longer ones
+        (day12/-digits-too-short? data)
         (day12/-string-too-short? data))))
 
 (defun day12/-find-coherent-subdata (data index)
@@ -151,7 +161,7 @@ elements are only guaranteed to be valid split, but are not checked against digi
   (apply #'+
          (-map #'day12/count-combinations
                (--map (progn
-                        (message "Processing %s" it)
+;                        (message "Processing %s" it)
                         it)
                       data-list))))
 
