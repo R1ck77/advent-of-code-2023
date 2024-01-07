@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t -*-
 (require 'dash)
 (require 'advent-utils)
 (require 's)
@@ -135,32 +136,43 @@ elements are only guaranteed to be valid split, but are not checked against digi
                                        (--map-indexed (cons it-index it) digits)))))
       (elt max-indices (/ (length max-indices) 2)))))
 
-(defun day12/-sorted-combine-intervals (pair)
-  (let ((first-value (day12/-count-combinations (car pair))))
+(defun day12/-sorted-combine-intervals (pair cache)
+  (let ((first-value (day12/-count-combinations (car pair) cache)))
     (if (zerop first-value)
         0
-      (* first-value (day12/-count-combinations (cadr pair))))))
+      (* first-value (day12/-count-combinations (cadr pair) cache)))))
 
-(defun day12/-combine-intervals (pair)
+(defun day12/-combine-intervals (pair cache)
   (if (< (s-count-matches "[?]" (or (plist-get (car pair) :s) ""))
          (s-count-matches "[?]" (or (plist-get (cadr pair) :s) "")))
-      (day12/-sorted-combine-intervals pair)
-    (day12/-sorted-combine-intervals (reverse pair))))
+      (day12/-sorted-combine-intervals pair cache)
+    (day12/-sorted-combine-intervals (reverse pair) cache)))
 
-(defun day12/-checked-count-combinations (data)
+(defun day12/-checked-count-combinations (data cache)
   (let ((digits (plist-get data :digits))
         (s (plist-get data :s)))
     (let* ((next-digits-index (day12/-get-next-index data))
            (subpairs (day12/-find-coherent-subdata data next-digits-index)))
-      (apply #'+  (-map #'day12/-combine-intervals
+      (apply #'+  (--map (day12/-combine-intervals it cache)
                          subpairs)))))
 
-(defun day12/-count-combinations (data)
-  (let ((result  (if (day12/-incoherent? data) 0
-                   (if (plist-get data :digits)
-                       (day12/-checked-count-combinations data)
-                     1))))
+(defun day12/-do-with-cache (f data cache)
+  (if-let ((cached-result (advent/get cache data)))
+      cached-result
+    (let ((new-result (funcall f data cache)))
+      (advent/put cache data new-result)
+      new-result)))
+
+(defun day12/-uncached-count-combinations (data cache)
+  (let ((result (if (day12/-incoherent? data) 0
+                  (if (plist-get data :digits)
+                      (day12/-checked-count-combinations data cache)
+                    1))))
     result))
+
+(defun day12/-count-combinations (data &optional cache)
+  (let ((cache (or cache (advent/table))))
+    (day12/-do-with-cache #'day12/-uncached-count-combinations data cache)))
 
 (defun day12/count-combinations (data)
   ;; Wrap the combination in a nice "." boundary to simplify everything
@@ -170,10 +182,7 @@ elements are only guaranteed to be valid split, but are not checked against digi
 (defun day12/resolve-problem (data-list)
   (apply #'+
          (-map #'day12/count-combinations
-               (--map (progn
-                        (message "Processing %s" it)
-                        it)
-                      data-list))))
+               data-list)))
 
 
 (defun day12/part-1 (lines)
