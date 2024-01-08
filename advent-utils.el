@@ -262,6 +262,18 @@ The value is binded to 'it'"
 (defun advent/grid-get (grid row-column)
   (aref (aref grid (car row-column)) (cdr row-column)))
 
+(defun advent/transpose (grid)
+  (let* ((size (advent/get-grid-size grid))
+         (new-grid (advent/make-grid  (cdr size) (car size) :undefined)))    
+    (-each (number-sequence 0 (1- (car size)))
+      (lambda (row)
+        (-each (number-sequence 0 (1- (cdr size)))
+          (lambda (column)
+            (advent/grid-set! new-grid
+                              (cons column row)
+                              (advent/grid-get grid (cons row column)))))))
+    new-grid))
+
 ;;;;;;;;;;;;;;;;;;;
 ;;; PROBLEM READERS
 
