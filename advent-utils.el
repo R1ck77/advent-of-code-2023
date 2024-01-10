@@ -275,6 +275,18 @@ The value is binded to 'it'"
                               (advent/grid-get grid (cons row column)))))))
     new-grid))
 
+(defun advent/rotate-right (grid)
+  (let* ((size (advent/get-grid-size grid))
+         (new-grid (advent/make-grid  (cdr size) (car size) :undefined)))    
+    (-each (number-sequence 0 (1- (car size)))
+      (lambda (row)
+        (-each (number-sequence 0 (1- (cdr size)))
+          (lambda (column)
+            (advent/grid-set! new-grid
+                              (cons column (- (car size) row 1))
+                              (advent/grid-get grid (cons row column)))))))
+    new-grid))
+
 (defun advent/grid-to-table (grid)
   "Convert the grid into a list of lists"
   (--map (advent/v->l it) (advent/v->l grid)))

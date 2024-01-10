@@ -11,10 +11,10 @@
 
 (defun day14/read-data (lines)
   (advent/lines-to-grid lines #'day14/letter-to-symbol))
-;;
-;;(setq example (advent/read-grid 14 :example #'day14/letter-to-symbol))
-;;(setq problem (advent/read-grid 14 :problem #'day14/letter-to-symbol))
-;;
+
+(setq example (advent/read-grid 14 :example #'day14/letter-to-symbol))
+(setq problem (advent/read-grid 14 :problem #'day14/letter-to-symbol))
+
 (defun day14/move-rock-up! (grid coord)
   "Very slow and ill matched to the structure I'm using. I hope it won't matter"
   (let ((column (cdr coord))
@@ -57,6 +57,33 @@
   (day14/weight-rocks
    (day14/move-everything-north
     (day14/read-data lines))))
+
+(defun day14/cycle! (grid)
+  (advent/rotate-right
+   (day14/move-everything-north
+    (advent/rotate-right
+     (day14/move-everything-north
+      (advent/rotate-right
+       (day14/move-everything-north
+        (advent/rotate-right
+         (day14/move-everything-north grid)))))))))
+
+(defun day14/make-iterator (grid)
+  (lexical-let ((copy (advent/copy-grid grid)))
+    (lambda ()
+      (let ((result (day14/weight-rocks copy)))
+        (setq copy (day14/cycle! copy))
+        result))))
+
+(defun day14/create-history-function (grid)
+  (lexical-let ((values)
+                (f (day14/make-iterator grid)))
+    (lambda (i)
+      (while (<= (length values) i)
+        (push (funcall f) values))
+      (elt values (- (length values) i 1)))))
+
+(defun day14/find-period (grid))
 
 (defun day14/part-2 (lines)
   (day14/read-data lines)
