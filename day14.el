@@ -16,7 +16,13 @@
 (setq problem (advent/read-grid 14 :problem #'day14/letter-to-symbol))
 
 (defun day14/move-rock-up! (grid coord)
-  "Very slow and ill matched to the structure I'm using. I hope it won't matter"
+  "VERY slow and ill matched for the structure I'm using.
+
+In the end, however:
+
+a) it'ss fast enough to be usable
+b) I know by heart how I should optimize it
+c) I have a life to live."
   (let ((column (cdr coord))
         (stop)
         (steps 0))
@@ -68,25 +74,46 @@
         (advent/rotate-right
          (day14/move-everything-north grid)))))))))
 
+(defun day14/hash-grid (grid)
+  (md5 (format "%s" grid)))
+
 (defun day14/make-iterator (grid)
   (lexical-let ((copy (advent/copy-grid grid)))
     (lambda ()
-      (let ((result (day14/weight-rocks copy)))
+      (let ((result (cons (day14/hash-grid copy)
+                          (day14/weight-rocks copy))))
         (setq copy (day14/cycle! copy))
         result))))
 
 (defun day14/create-history-function (grid)
   (lexical-let ((values)
                 (f (day14/make-iterator grid)))
-    (lambda (i)
-      (while (<= (length values) i)
-        (push (funcall f) values))
-      (elt values (- (length values) i 1)))))
+    (lambda (&optional i)
+      (let ((i (or i (length values))))
+       (while (<= (length values) i)
+         (push (funcall f) values))
+       (elt values (- (length values) i 1))))))
 
-(defun day14/find-period (grid))
+(defun day14/find-period-data (f)
+  (let ((first)
+        (period)
+        (values))
+    (while (not period)
+      (push (car (funcall f)) values)
+      (when (-contains? (cdr values) (car values))
+        (let ((list (reverse values)))
+          (setq first (-elem-index (car values) list))
+          (setq period (- (length list) first 1)))))
+    (list first period)))
+
+(defun day14/compute-target-from-period-data (f first+period)
+  (let* ((first (car first+period))
+         (period (cadr first+period))
+         (index (+ (% (- 1000000000 first) period) first)))
+    (cdr (funcall f index))))
 
 (defun day14/part-2 (lines)
-  (day14/read-data lines)
-  (error "Not yet implemented"))
+  (let ((f (day14/create-history-function (day14/read-data lines))))
+    (day14/compute-target-from-period-data f (day14/find-period-data f))))
 
 (provide 'day14)
