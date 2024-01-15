@@ -7,10 +7,7 @@
     (advent/s->k s)))
 
 (defun day16/read-data (lines)
-  (let ((layout (advent/lines-to-grid lines #'day16/read-cell)))
-    (list :layout layout
-          :beams (advent/make-grid-like layout)
-          :heads '((:dir :r :pos (0 . -1))))))
+  (advent/lines-to-grid lines #'day16/read-cell))
 
 (setq example (day16/read-data (advent/read-problem-lines 16 :example)))
 (setq problem (day16/read-data (advent/read-problem-lines 16 :problem)))
@@ -111,18 +108,17 @@
       state
     (day16/-evolve-state! state)))
 
-(defun day16/copy-state (state)
-  (day16/with-state state
-   (list :layout layout
-         :beams (advent/copy-grid beams)
-         :heads heads)))
+(defun day16/create-state (layout entry-point)
+  (list :layout layout
+        :beams (advent/make-grid-like layout)
+        :heads (list entry-point)))
 
-(defun day16/simulate-light (state)
-  (let ((work-copy (day16/copy-state state))
+(defun day16/simulate-light (layout entry-point)
+  (let ((state (day16/create-state layout entry-point))
         (next))
-    (while (not (eq (setq next (day16/next! work-copy)) work-copy))
-      (setq work-copy next))
-    work-copy))
+    (while (not (eq (setq next (day16/next! state)) state))
+      (setq state next))
+    state))
 
 (defun day16/count-light (state)
   (let ((lights 0))
@@ -132,25 +128,25 @@
    lights))
 
 (defun day16/part-1 (lines)
-  (day16/count-light (day16/simulate-light (day16/read-data lines))))
+  (day16/count-light
+   (day16/simulate-light (day16/read-data lines)
+                         '(:dir :r :pos (0 . -1)))))
 
-(defun day16/get-starting-heads (state)
-  (let ((grid-size (advent/get-grid-size (plist-get state :layout))))
+(defun day16/get-starting-heads (layout)
+  (let ((grid-size (advent/get-grid-size layout)))
     (append (--map (list :dir :r :pos (cons it -1)) (number-sequence 0 (1- (car grid-size))) )
             (--map (list :dir :l :pos (cons it (cdr grid-size))) (number-sequence 0 (1- (car grid-size))) )
             (--map (list :dir :d :pos (cons -1 it)) (number-sequence 0 (1- (cdr grid-size))) )
             (--map (list :dir :u :pos (cons (car grid-size) it)) (number-sequence 0 (1- (car grid-size))) ))))
 
-(defun day16/count-best-light-for-entry-points (state)
-  (let ((entry-points (day16/get-starting-heads state)))
-    (day16/with-state state
-      (apply #'max (--map (day16/count-light (day16/simulate-light it))
-                          (--map (list :layout layout
-                                       :beams beams
-                                       :heads (list it))
-                                 entry-points))))))
+(defun day16/count-best-light-for-entry-points (layout)
+  (let ((entry-points (day16/get-starting-heads layout)))
+    (apply #'max (--map (day16/count-light
+                         (day16/simulate-light layout it))
+                        entry-points))))
 
 (defun day16/part-2 (lines)
-  (day16/count-best-light-for-entry-points (day16/read-data lines)))
+  (day16/count-best-light-for-entry-points
+   (day16/read-data lines)))
 
 (provide 'day16)
