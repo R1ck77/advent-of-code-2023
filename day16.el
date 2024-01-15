@@ -134,7 +134,23 @@
 (defun day16/part-1 (lines)
   (day16/count-light (day16/simulate-light (day16/read-data lines))))
 
+(defun day16/get-starting-heads (state)
+  (let ((grid-size (advent/get-grid-size (plist-get state :layout))))
+    (append (--map (list :dir :r :pos (cons it -1)) (number-sequence 0 (1- (car grid-size))) )
+            (--map (list :dir :l :pos (cons it (cdr grid-size))) (number-sequence 0 (1- (car grid-size))) )
+            (--map (list :dir :d :pos (cons -1 it)) (number-sequence 0 (1- (cdr grid-size))) )
+            (--map (list :dir :u :pos (cons (car grid-size) it)) (number-sequence 0 (1- (car grid-size))) ))))
+
+(defun day16/count-best-light-for-entry-points (state)
+  (let ((entry-points (day16/get-starting-heads state)))
+    (day16/with-state state
+      (apply #'max (--map (day16/count-light (day16/simulate-light it))
+                          (--map (list :layout layout
+                                       :beams beams
+                                       :heads (list it))
+                                 entry-points))))))
+
 (defun day16/part-2 (lines)
-  (error "Not yet implemented"))
+  (day16/count-best-light-for-entry-points (day16/read-data lines)))
 
 (provide 'day16)
