@@ -201,6 +201,10 @@ It binds:
           (aset rows row (make-vector n-columns value)))
     rows))
 
+(defun advent/make-grid-like (grid &optional value)
+  (let ((rows-columns (advent/get-grid-size grid)))
+   (advent/make-grid (car rows-columns) (cdr rows-columns) value)))
+
 (defun advent/copy-grid (grid)
   "Returns a copy of the grid (cells are referenced)"
   (apply #'vector
