@@ -120,6 +120,16 @@
       (setq state next))
     state))
 
+(defun day16/-debug-row-to-string (row)
+  (--map (if it "#" ".") row))
+
+(defun day16/debug-to-string (state)
+  (apply #'concat
+         (apply #'append
+          (-interpose '("\n") (-map #'day16/-debug-row-to-string
+                                    (advent/grid-to-table
+                                     (plist-get state :beams)))))))
+
 (defun day16/count-light (state)
   (let ((lights 0))
    (day16/with-state state
