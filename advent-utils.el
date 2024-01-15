@@ -429,6 +429,12 @@ it is bound to the current row and column"
                          (redisplay)
                          (cons 0 now)))))
 
+;; Misc
+(defun advent/s->k (s)
+  (let ((symbol-name (concat ":" s)))
+    (or (intern-soft symbol-name)
+        (intern symbol-name))))
+
 (defun advent/cache-f (f)
   (lexical-let ((cache (advent/table)))
     (lambda (value)

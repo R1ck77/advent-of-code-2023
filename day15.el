@@ -25,16 +25,11 @@
              box-content)
     (cons (cons label fl) box-content)))
 
-(defun day15/make-label (s)
-  (let ((symbol-name (concat ":" s)))
-    (or (intern-soft symbol-name)
-        (intern symbol-name))))
-
 (defun day15/read-operation (s)
   (if-let ((result (s-match "\\([a-z]+\\)\\([-=]\\)\\([0-9]*\\)$" s)))
-      (list :op (day15/make-label (elt result 2))
+      (list :op (advent/s->k (elt result 2))
             :box (day15/compute-hash (elt result 1))
-            :label (day15/make-label (elt result 1))
+            :label (advent/s->k (elt result 1))
             :fl (and (not (s-blank? (elt result 3)))
                      (string-to-number (elt result 3))))))
 
