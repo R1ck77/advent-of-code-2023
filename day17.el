@@ -1,6 +1,7 @@
 (require 'dash)
 (require 'advent-utils)
 (require 's)
+(require 'avl-tree)
 
 (defconst day17/direction-turns '(((1 . 0) . ((0 . 1) (0 . -1)))
                                   ((-1 . 0) . ((0 . 1) (0 . -1)))
@@ -31,17 +32,27 @@
            ;; The current moves, as day17/crucible
            moves)
 
+;; TODO/FIXME messed up! I'm merging the two solutions
+(defun day17/compare-crucibles (a b)
+  (< (day17/crucible-heat a)
+     (day17/crucible-heat b)))
+
+(defun day17/create-starting-moves ()
+  (let ((tree (avl-tree-create #'day17/compare-crucibles)))
+    (avl-tree-enter tree (make-day17/crucible :heat 0
+                                          :dir '(1 . 0)
+                                          :speed 0
+                                          :pos '(0 . 0)))
+    (avl-tree-enter tree (make-day17/crucible :heat 0
+                                          :dir '(0 . 1)
+                                          :speed 0
+                                          :pos '(0 . 0)))
+    tree))
+
 (defun day17/create-problem (grid)
   (make-day17/problem :grid grid
                       :size (advent/get-grid-size grid)
-                      :moves (list (make-day17/crucible :heat 0
-                                                        :dir '(1 . 0)
-                                                        :speed 0
-                                                        :pos '(0 . 0))
-                                   (make-day17/crucible :heat 0
-                                                        :dir '(0 . 1)
-                                                        :speed 0
-                                                        :pos '(0 . 0)))))
+                      :moves (day17/create-starting-moves)))
 (defun day17/feasible-directions (crucible)
   "List of directions the crucible could possibly take.
 
@@ -75,6 +86,15 @@ Accounds for the current crucible direction and speed only"
   (--map (day17/update-crucible grid crucible it)
          (--filter (day17/is-valid-move? size crucible it)
                    (day17/feasible-directions crucible))))
+
+(defun day17/evolve-move! (problem)
+  ;; TODO/FIXME check the destructuring-bind thingy
+  (let ((grid (day17/problem-grid problem))
+        (size (day17/problem-size problem))
+        (moves (day17/problem-moves problem)))
+    (let ((evolved-crucible (day17/evolve-crucible grid size (avl-tree-stack-pop (avl-tree-stack  moves)))))
+      (--each evolved-crucible
+        (avl-tree-enter moves it)))))
 
 (defun day17/part-1 (lines)
   (day17/read-data lines)
