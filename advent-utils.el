@@ -447,6 +447,16 @@ it is bound to the current row and column"
             (advent/put cache value result)
             result)))))
 
+(defun advent/cons-bifunction (f a b)
+  (cons (funcall f (car a) (car b))
+        (funcall f (cdr a) (cdr b))))
+
+(defun advent/cons+ (a b)
+  (advent/cons-bifunction #'+ a b))
+
+(defun advent/cons- (a b)
+  (advent/cons-bifunction #'- a b))
+
 ;; Dijkstra
 
 
