@@ -447,4 +447,7 @@ it is bound to the current row and column"
             (advent/put cache value result)
             result)))))
 
+;; Dijkstra
+
+
 (provide 'advent-utils)
